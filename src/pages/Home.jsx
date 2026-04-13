@@ -81,8 +81,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats Section */}
-        <div className="mt-24 grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl w-full border-t border-gray-800 pt-16 relative">
+        {/* Stats Section - ADDED MARGIN FOR MOBILE CLEARANCE */}
+        <div className="mt-24 sm:mt-32 grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl w-full border-t border-gray-800 pt-16 pb-20 relative">
           {/* Decorative blur */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-32 bg-[#FF6B2B]/10 blur-[100px] pointer-events-none"></div>
 

@@ -43,20 +43,19 @@ export default function AnimatedBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
       
-      {/* Dynamic Background Quote - MOVED TO BOTTOM FOR CLARITY */}
+      {/* Dynamic Background Quote - TOP PLACEMENT TO AVOID OVERLAP */}
       <AnimatePresence mode="wait">
         <motion.div 
           key={quote}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 0.4, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.15 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 1 }}
-          className="absolute bottom-36 right-4 md:right-8 w-64 select-none z-[5] p-4 text-right"
+          className="absolute top-4 left-0 w-full select-none z-[5] text-center hidden sm:block"
         >
-          <div className="border-r-4 border-[#FF6B2B] pr-4">
-            <p className="text-xs md:text-sm font-medium text-white italic">"{quote.split('—')[0].trim()}"</p>
-            <p className="text-[10px] text-[#FF6B2B] font-bold mt-1">— {quote.split('—')[1]?.trim()}</p>
-          </div>
+          <p className="text-[10px] md:text-xs font-medium text-white italic px-10">
+            "{quote.split('—')[0].trim()}" — <span className="text-[#FF6B2B]">{quote.split('—')[1]?.trim()}</span>
+          </p>
         </motion.div>
       </AnimatePresence>
 
