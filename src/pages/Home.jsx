@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AnimatedBackground from '../components/AnimatedBackground';
-import MockPaymentGateway from '../components/MockPaymentGateway';
 import { useAppContext } from '../context/AppContext';
 import { motion } from 'framer-motion';
 

@@ -12,8 +12,7 @@ export default function Login() {
   const [name, setName] = useState('');
   const [photoPreview, setPhotoPreview] = useState(null);
   
-  const [step, setStep] = useState(1); // 1: Role, 2: Phone, 3: OTP, 4: Profile
-  const [isNewUser, setIsNewUser] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
   const { login, API_BASE } = useAppContext();
@@ -26,7 +25,7 @@ export default function Login() {
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
     if (phone.length < 10) return alert("Enter valid 10 digit number");
-    
+    setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
@@ -35,24 +34,31 @@ export default function Login() {
       });
       const data = await res.json();
       setIsNewUser(data.isNewUser);
-      // If returning user has a different role than selected, we might want to respect it
       if (!data.isNewUser && data.role) setRole(data.role);
       setStep(3);
     } catch (err) {
       alert("Failed to connect to server. Check internet.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleOtpSubmit = (e) => {
+  const handleOtpSubmit = async (e) => {
     e.preventDefault();
     if (otp !== '1234') return alert("Invalid OTP. For demo use 1234");
     
-    if (!isNewUser) {
-      // Returning user, try login immediately with dummy name/photo to get token
-      login(phone, otp, '', role, '');
-      navigate('/dashboard');
-    } else {
-      setStep(4);
+    setLoading(true);
+    try {
+      if (!isNewUser) {
+        await login(phone, otp, '', role, '');
+        navigate('/dashboard');
+      } else {
+        setStep(4);
+      }
+    } catch (err) {
+      alert(err.message || "OTP Verification failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,11 +66,14 @@ export default function Login() {
     e.preventDefault();
     if (!name.trim()) return alert("Please enter your name");
     
+    setLoading(true);
     try {
       await login(phone, otp, name, role, photoPreview);
       navigate('/dashboard');
     } catch (err) {
       alert(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -154,8 +163,8 @@ export default function Login() {
                   />
                 </div>
               </div>
-              <button type="submit" className="w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-xl mt-6 transition cursor-pointer">
-                Continue
+              <button type="submit" disabled={loading} className={`w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-xl mt-6 transition cursor-pointer ${loading ? 'opacity-70 animate-pulse' : ''}`}>
+                {loading ? 'Sending...' : 'Continue'}
               </button>
             </motion.form>
           )}
@@ -178,8 +187,8 @@ export default function Login() {
               <div className="bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 p-3 rounded-lg mt-4 inline-block">
                 <p className="text-sm text-[#FF6B2B] font-semibold">Demo Bypass Code: <span className="text-white text-lg">1234</span></p>
               </div>
-              <button type="submit" className="w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-xl mt-6 transition cursor-pointer">
-                Verify & {isNewUser ? 'Sign Up' : 'Login'}
+              <button type="submit" disabled={loading} className={`w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-xl mt-6 transition cursor-pointer ${loading ? 'opacity-70 animate-pulse' : ''}`}>
+                {loading ? 'Verifying...' : `Verify & ${isNewUser ? 'Sign Up' : 'Login'}`}
               </button>
             </motion.form>
           )}
@@ -211,8 +220,8 @@ export default function Login() {
                 <input type="text" placeholder="e.g. Rahul Sharma" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#121212] border border-gray-800 focus:border-[#FF6B2B] rounded-xl px-4 py-3 outline-none text-white transition" autoFocus required />
               </div>
 
-              <button type="submit" className="w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-xl mt-6 transition cursor-pointer flex items-center justify-center">
-                <CheckCircle size={18} className="mr-2" /> Finish Setup
+              <button type="submit" disabled={loading} className={`w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-xl mt-6 transition cursor-pointer flex items-center justify-center ${loading ? 'opacity-70 animate-pulse' : ''}`}>
+                {loading ? 'Finishing...' : (<><CheckCircle size={18} className="mr-2" /> Finish Setup</>)}
               </button>
             </motion.form>
           )}

@@ -43,19 +43,19 @@ export default function AnimatedBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
       
-      {/* Dynamic Background Quote - MADE 100% VISIBLE */}
+      {/* Dynamic Background Quote - MOVED TO BOTTOM FOR CLARITY */}
       <AnimatePresence mode="wait">
         <motion.div 
           key={quote}
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: -20 }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 0.4, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
           transition={{ duration: 1 }}
-          className="absolute top-28 md:top-36 left-4 md:left-8 w-64 select-none z-[100] bg-[#121212]/50 backdrop-blur-md p-4 rounded-2xl border border-gray-800"
+          className="absolute bottom-36 right-4 md:right-8 w-64 select-none z-[5] p-4 text-right"
         >
-          <div className="border-l-4 border-[#FF6B2B] pl-4">
-            <p className="text-sm md:text-md font-bold text-white italic drop-shadow-md">"{quote.split('—')[0].trim()}"</p>
-            <p className="text-xs text-[#FF6B2B] font-bold mt-2">— {quote.split('—')[1]?.trim()}</p>
+          <div className="border-r-4 border-[#FF6B2B] pr-4">
+            <p className="text-xs md:text-sm font-medium text-white italic">"{quote.split('—')[0].trim()}"</p>
+            <p className="text-[10px] text-[#FF6B2B] font-bold mt-1">— {quote.split('—')[1]?.trim()}</p>
           </div>
         </motion.div>
       </AnimatePresence>
