@@ -15,25 +15,42 @@ export default function Login() {
   const [step, setStep] = useState(1); // 1: Phone, 2: OTP, 3: Profile
   
   const navigate = useNavigate();
-  const { login } = useAppContext();
+  const { login, API_BASE } = useAppContext();
 
-  const handlePhoneSubmit = (e) => {
+  const handlePhoneSubmit = async (e) => {
     e.preventDefault();
     if (phone.length < 10) return alert("Enter valid 10 digit number");
-    setStep(2);
+    
+    try {
+      await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      });
+      setStep(2);
+    } catch (err) {
+      alert("Failed to send OTP");
+    }
   };
 
   const handleOtpSubmit = (e) => {
     e.preventDefault();
+    // We verify OTP during final setup for simplicity in this flow, 
+    // but in a real app, you'd verify here and get a temp session.
     if (otp !== '1234') return alert("Invalid OTP. Try 1234");
     setStep(3);
   };
 
-  const handleFinalSubmit = (e) => {
+  const handleFinalSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return alert("Please enter your name");
-    login(name, role, photoPreview);
-    navigate('/dashboard');
+    
+    try {
+      await login(phone, otp, name, role, photoPreview);
+      navigate('/dashboard');
+    } catch (err) {
+      alert(err.message || "Login failed");
+    }
   };
 
   const handlePhotoUpload = (e) => {

@@ -22,7 +22,8 @@ export default function Messages() {
   }
 
   // Find the selected message details
-  const currentThread = messages.find(m => m.id === activeChat);
+  const currentThread = messages.find(m => m._id === activeChat);
+  const otherUser = currentThread?.senderId?._id === user._id ? currentThread?.receiverId : currentThread?.senderId;
 
   return (
     <motion.div 
@@ -44,43 +45,35 @@ export default function Messages() {
 
       <div className="flex flex-1 overflow-hidden">
         
-        {/* Inbox List */}
+        {/* Inbox List (Already updated) */}
         <div className={`w-full md:w-1/3 border-r border-gray-800 bg-[#121212] overflow-y-auto ${activeChat ? 'hidden md:block' : 'block'}`}>
           <div className="p-4 border-b border-gray-800">
             <h2 className="font-bold text-gray-400 uppercase text-xs tracking-wider">Your Requests ({messages.length})</h2>
           </div>
-          
           {messages.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-sm">
-              No messages yet. Go to Dashboard and Ping someone!
-            </div>
+            <div className="p-8 text-center text-gray-500 text-sm">No messages yet. Go to Dashboard and Ping someone!</div>
           ) : (
-            messages.slice().reverse().map(msg => (
-              <div 
-                key={msg.id} 
-                onClick={() => setActiveChat(msg.id)}
-                className={`p-4 border-b border-gray-800/50 hover:bg-[#1E1E1E] cursor-pointer transition ${activeChat === msg.id ? 'bg-[#1E1E1E] border-l-2 border-l-[#FF6B2B]' : ''}`}
-              >
-                <div className="flex justify-between items-start mb-1">
-                  <div className="font-bold">{msg.from}</div>
-                  <div className="text-xs text-gray-500">Just now</div>
+            messages.slice().reverse().map(thread => {
+              const oUsr = thread.senderId?._id === user._id ? thread.receiverId : thread.senderId;
+              return (
+                <div key={thread._id} onClick={() => setActiveChat(thread._id)} className={`p-4 border-b border-gray-800/50 hover:bg-[#1E1E1E] cursor-pointer transition ${activeChat === thread._id ? 'bg-[#1E1E1E] border-l-2 border-l-[#FF6B2B]' : ''}`}>
+                  <div className="flex justify-between items-start mb-1">
+                    <div className="font-bold">{oUsr?.name || 'User'}</div>
+                    <div className="text-xs text-gray-500">{new Date(thread.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  </div>
+                  <div className="text-sm text-gray-400 mb-2">{thread.senderId?._id === user._id ? 'Outgoing' : 'Incoming'}</div>
+                  {thread.status === 'pending' && <span className="inline-flex items-center text-xs font-semibold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded"><Clock size={12} className="mr-1"/> Pending</span>}
+                  {thread.status === 'accepted' && <span className="inline-flex items-center text-xs font-semibold text-green-500 bg-green-500/10 px-2 py-1 rounded"><Check size={12} className="mr-1"/> Accepted</span>}
                 </div>
-                <div className="text-sm text-gray-400 mb-2">Subject: {msg.subject}</div>
-                
-                {msg.status === 'pending' && <span className="inline-flex items-center text-xs font-semibold text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded"><Clock size={12} className="mr-1"/> Pending Reply</span>}
-                {msg.status === 'accepted' && <span className="inline-flex items-center text-xs font-semibold text-green-500 bg-green-500/10 px-2 py-1 rounded"><Check size={12} className="mr-1"/> Accepted</span>}
-                {msg.status === 'declined' && <span className="inline-flex items-center text-xs font-semibold text-red-500 bg-red-500/10 px-2 py-1 rounded"><X size={12} className="mr-1"/> Declined</span>}
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
         {/* Chat Area */}
         <div className={`w-full md:w-2/3 bg-[#1A1A1A] flex flex-col ${!activeChat ? 'hidden md:flex' : 'flex'}`}>
           {!activeChat ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
-              Select a message to view details
-            </div>
+            <div className="flex-1 flex items-center justify-center text-gray-500">Select a message to view details</div>
           ) : (
             <>
               {/* Chat Header */}
@@ -88,70 +81,58 @@ export default function Messages() {
                 <button onClick={() => setActiveChat(null)} className="md:hidden p-2 bg-[#121212] rounded-full">
                   <ArrowLeft size={16} />
                 </button>
-                <div>
-                  <h3 className="font-bold text-lg">{currentThread?.from}</h3>
-                  <p className="text-xs text-gray-400 capitalize">{currentThread?.role} • Looking for {currentThread?.subject} at {currentThread?.price}</p>
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center border border-gray-700">
+                    {otherUser?.photo ? <img src={otherUser.photo} alt="" className="w-full h-full object-cover" /> : <User className="p-2 text-gray-500" />}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">{otherUser?.name}</h3>
+                    <p className="text-xs text-gray-400 capitalize">{otherUser?.role} • Connect Request</p>
+                  </div>
                 </div>
               </div>
               
               {/* Chat History & Action Area */}
               <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                {/* Initial Intro Message */}
                 <div className="bg-[#121212] rounded-2xl p-4 border border-gray-800 max-w-sm mb-4">
-                  <p className="text-sm">Hi, I found your profile on the map! I'm looking to connect regarding {currentThread?.subject}. My budget/fee is {currentThread?.price}.</p>
-                  
-                  {currentThread?.freeSlot && currentThread.freeSlot.trim() !== '' && (
+                  <p className="text-sm">Hi, I found your profile on the map! I'm looking to connect.</p>
+                  {currentThread?.freeSlot && (
                     <div className="mt-3 p-2 bg-[#FF6B2B]/10 border border-[#FF6B2B]/30 rounded-lg">
-                      <span className="text-xs text-[#FF6B2B] font-bold uppercase tracking-wider block mb-1">My Available Slot:</span>
+                      <span className="text-xs text-[#FF6B2B] font-bold uppercase tracking-wider block mb-1">Proposed Slot:</span>
                       <p className="text-sm text-gray-300 italic">"{currentThread.freeSlot}"</p>
                     </div>
                   )}
-
                   <p className="text-xs text-gray-500 mt-2 text-right">System Generated Intro</p>
                 </div>
+
+                {/* Status Messages */}
+                {currentThread?.status === 'accepted' && (
+                  <div className="bg-green-500/10 text-green-500 p-3 rounded-xl text-center text-sm border border-green-500/20 mb-4">
+                    Connection Request Accepted!
+                  </div>
+                )}
+                
+                {/* Real Messages List */}
+                {currentThread?.messages?.slice(1).map((msg, idx) => (
+                  <div key={idx} className={`max-w-sm mb-4 p-3 rounded-xl ${msg.sender === user._id ? 'bg-[#FF6B2B] ml-auto text-white' : 'bg-gray-800 text-gray-200'}`}>
+                    <p className="text-sm">{msg.text}</p>
+                  </div>
+                ))}
                 
                 {/* Accept/Decline action if pending */}
-                {currentThread?.status === 'pending' && (
+                {currentThread?.status === 'pending' && currentThread?.receiverId?._id === user._id && (
                   <div className="mt-6 flex flex-col items-center justify-center max-w-md mx-auto space-y-4">
                     <input 
                       type="text" 
                       id="acceptSlotInput"
-                      placeholder="Mention your free slot here (Optional)" 
+                      placeholder="Comment something... (Optional)" 
                       className="w-full bg-[#121212] py-3 px-4 rounded-xl border border-gray-800 outline-none text-sm text-white focus:border-[#FF6B2B] transition"
                     />
                     <div className="flex justify-center space-x-4 w-full">
-                      <button 
-                        onClick={() => updateMessageStatus(currentThread.id, 'declined')}
-                        className="flex-1 py-3 hover:bg-[#121212] rounded-xl font-bold border border-gray-600 transition cursor-pointer"
-                      >
-                        Decline
-                      </button>
-                      <button 
-                        onClick={() => {
-                          const val = document.getElementById('acceptSlotInput')?.value || '';
-                          if (val) {
-                            // Quick hack to attach the responder's slot to the message object using existing context without deep restructure
-                            currentThread.responderSlot = val;
-                          }
-                          updateMessageStatus(currentThread.id, 'accepted')
-                        }}
-                        className="flex-1 py-3 rounded-xl font-bold bg-[#FF6B2B] hover:bg-[#e85a1f] transition cursor-pointer"
-                      >
-                        Accept Request
-                      </button>
+                      <button onClick={() => updateMessageStatus(currentThread._id, 'declined')} className="flex-1 py-3 hover:bg-[#121212] rounded-xl font-bold border border-gray-600 transition cursor-pointer">Decline</button>
+                      <button onClick={() => updateMessageStatus(currentThread._id, 'accepted', document.getElementById('acceptSlotInput')?.value)} className="flex-1 py-3 rounded-xl font-bold bg-[#FF6B2B] hover:bg-[#e85a1f] transition cursor-pointer">Accept</button>
                     </div>
-                  </div>
-                )}
-                
-                {currentThread?.status === 'declined' && (
-                  <div className="mt-6 text-center text-red-500 text-sm p-3 bg-red-500/10 rounded-xl">
-                    You have declined this request.
-                  </div>
-                )}
-
-                {currentThread?.status === 'accepted' && currentThread?.responderSlot && (
-                  <div className="bg-[#FF6B2B]/10 rounded-2xl p-4 border border-[#FF6B2B]/30 max-w-sm ml-auto mt-4">
-                    <span className="text-xs text-[#FF6B2B] font-bold block mb-1">You replied with your slot:</span>
-                    <p className="text-sm">"{currentThread.responderSlot}"</p>
                   </div>
                 )}
               </div>

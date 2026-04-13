@@ -1,57 +1,106 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { io } from 'socket.io-client';
 
 const AppContext = createContext();
 
+// Railway Backend Public URL (Update this if it changes!)
+const API_BASE = "https://tutionpao-backend-production.up.railway.app"; 
+
 export function AppProvider({ children }) {
-  const [user, setUser] = useState(null); // { name, role: 'student' | 'tutor', isSubscribed: false }
-  const [messages, setMessages] = useState([]); // [{ id, from, subject, status, price }]
-  const [activePlan, setActivePlan] = useState(null);
-
-  // Load from local storage on mount (mocking persistence)
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
     const saved = localStorage.getItem('tutionpao_user');
-    if (saved) setUser(JSON.parse(saved));
-    const savedMsg = localStorage.getItem('tutionpao_msgs');
-    if (savedMsg) setMessages(JSON.parse(savedMsg));
-  }, []);
+    return saved ? JSON.parse(saved) : null;
+  });
+  
+  const [messages, setMessages] = useState([]);
+  const [socket, setSocket] = useState(null);
 
-  const login = (name, role, photoUrl) => {
-    // If student and no photo, set default
-    let finalPhoto = photoUrl;
-    if (!finalPhoto && role === 'student') finalPhoto = '/default_runner.svg';
-    else if (!finalPhoto) finalPhoto = ''; // Default for tutor if any
+  // Initialize Socket.io connection when user logs in
+  useEffect(() => {
+    if (user && user._id) {
+      const newSocket = io(API_BASE);
+      setSocket(newSocket);
+      newSocket.emit('join', user._id);
 
-    const freshUser = { name, role, isSubscribed: false, photo: finalPhoto };
-    setUser(freshUser);
-    localStorage.setItem('tutionpao_user', JSON.stringify(freshUser));
+      newSocket.on('new_request', (data) => {
+        setMessages(prev => [data, ...prev]);
+      });
+
+      newSocket.on('receive_message', (data) => {
+        fetchMessages(user._id);
+      });
+
+      return () => newSocket.close();
+    }
+  }, [user]);
+
+  const fetchMessages = async (userId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/chat/threads/${userId}`);
+      const data = await res.json();
+      setMessages(data);
+    } catch (err) {
+      console.error("Message Fetch Error:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (user && user._id) fetchMessages(user._id);
+  }, [user]);
+
+  const login = async (phone, otp, name, role, photo, qualifications, school) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp, name, role, photo, qualifications, school })
+      });
+      
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setUser(data.user);
+      localStorage.setItem('tutionpao_token', data.token);
+      localStorage.setItem('tutionpao_user', JSON.stringify(data.user));
+      return data.user;
+    } catch (err) {
+      throw err;
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('tutionpao_user');
+    localStorage.removeItem('tutionpao_token');
   };
 
-  const subscribe = (planName) => {
-    const upgraded = { ...user, isSubscribed: true };
-    setUser(upgraded);
-    setActivePlan(planName);
-    localStorage.setItem('tutionpao_user', JSON.stringify(upgraded));
+  const sendPing = (receiverId, freeSlot) => {
+    if (socket && user) {
+      socket.emit('send_ping', {
+        senderId: user._id,
+        receiverId,
+        freeSlot
+      });
+    }
   };
 
-  const receivePing = (pingData) => {
-    const updated = [...messages, { id: Date.now(), ...pingData, status: 'pending' }];
-    setMessages(updated);
-    localStorage.setItem('tutionpao_msgs', JSON.stringify(updated));
+  const updateMessageStatus = async (threadId, status, freeSlot) => {
+    try {
+      await fetch(`${API_BASE}/api/chat/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ threadId, status, freeSlot })
+      });
+      if (user) fetchMessages(user._id);
+    } catch (err) {
+      console.error("Status Update Error:", err);
+    }
   };
-
-  const updateMessageStatus = (id, newStatus) => {
-    const updated = messages.map(m => m.id === id ? { ...m, status: newStatus } : m);
-    setMessages(updated);
-    localStorage.setItem('tutionpao_msgs', JSON.stringify(updated));
-  }
 
   return (
-    <AppContext.Provider value={{ user, login, logout, subscribe, messages, receivePing, updateMessageStatus, activePlan }}>
+    <AppContext.Provider value={{ 
+      user, login, logout, messages, sendPing, updateMessageStatus, API_BASE 
+    }}>
       {children}
     </AppContext.Provider>
   );

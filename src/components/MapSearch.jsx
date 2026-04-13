@@ -32,58 +32,75 @@ export default function MapSearch({ mode, subject, budget, onClose }) {
   const [scanning, setScanning] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [pingSent, setPingSent] = useState(false);
+  const [targets, setTargets] = useState([]);
+  const [userLocation, setUserLocation] = useState(center);
   
-  const { receivePing, user } = useAppContext();
-
-  const targets = mode === 'student' ? mockTutors : mockStudents;
+  const { sendPing, user, API_BASE } = useAppContext();
 
   useEffect(() => {
-    // Simulate scan for 2 seconds
-    const timer = setTimeout(() => {
-      setScanning(false);
-    }, 2000);
+    // Get real location if available
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        setUserLocation([pos.coords.latitude, pos.coords.longitude]);
+        // Also update backend with location
+        if (user && user._id) {
+          fetch(`${API_BASE}/api/auth/location`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user._id, lat: pos.coords.latitude, lng: pos.coords.longitude })
+          });
+        }
+      });
+    }
+
+    // Fetch nearby users
+    const fetchNearby = async () => {
+      try {
+        const targetRole = mode === 'student' ? 'tutor' : 'student';
+        const res = await fetch(`${API_BASE}/api/auth/nearby?lat=${userLocation[0]}&lng=${userLocation[1]}&role=${targetRole}`);
+        const data = await res.json();
+        setTargets(data);
+        setScanning(false);
+      } catch (err) {
+        console.error("Fetch nearby error:", err);
+        setScanning(false);
+      }
+    };
+
+    const timer = setTimeout(fetchNearby, 2000);
     return () => clearTimeout(timer);
-  }, []);
+  }, [mode, userLocation, user]);
 
   const handlePing = () => {
     if (!user) {
       alert("Please login first to send pings.");
       return;
     }
+    const slotVal = document.getElementById('freeSlotInput')?.value || '';
+    sendPing(selectedUser._id, slotVal);
     setPingSent(true);
-    // Send to global context
-    receivePing({
-      from: selectedUser.name,
-      role: selectedUser.role,
-      subject: selectedUser.subject,
-      price: selectedUser.fee || selectedUser.budget
-    });
-    
-    setTimeout(() => {
-      alert(`${selectedUser.name} has ACCEPTED your request! Check your Messages dashboard.`);
-    }, 1500);
   };
 
   return (
     <div className="absolute inset-0 z-50 bg-[#121212] flex flex-col md:flex-row">
       {/* Map Area */}
       <div className="relative flex-1 h-full">
-        <MapContainer center={center} zoom={14} className="w-full h-full" zoomControl={false}>
+        <MapContainer center={userLocation} zoom={14} className="w-full h-full" zoomControl={false}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
           />
           
-          <Marker position={center}>
+          <Marker position={userLocation}>
             <Popup>You are here</Popup>
           </Marker>
 
-          <Circle center={center} pathOptions={{ fillColor: '#FF6B2B', color: '#FF6B2B' }} radius={5000} />
+          <Circle center={userLocation} pathOptions={{ fillColor: '#FF6B2B', color: '#FF6B2B' }} radius={5000} />
 
           {!scanning && targets.map(target => (
             <Marker 
-              key={target.id} 
-              position={[target.lat, target.lng]}
+              key={target._id} 
+              position={[target.location.coordinates[1], target.location.coordinates[0]]}
               eventHandlers={{
                 click: () => {
                   setSelectedUser(target);
@@ -103,7 +120,7 @@ export default function MapSearch({ mode, subject, budget, onClose }) {
               <span className="relative inline-flex rounded-full h-3 w-3 bg-[#FF6B2B]"></span>
             </span>
             <span className="text-sm font-semibold">
-              {scanning ? "Scanning 5km radius..." : `Found ${targets.length} matches nearby`}
+              {scanning ? "Scanning 5km radius..." : `Found ${targets.length} ${mode === 'student' ? 'tutors' : 'students'} nearby`}
             </span>
           </div>
           <button 
@@ -145,7 +162,7 @@ export default function MapSearch({ mode, subject, budget, onClose }) {
                   {selectedUser.role === 'tutor' && (
                     <div className="flex items-center text-[#FF6B2B] text-sm font-semibold">
                       <Star size={14} className="fill-current mr-1" />
-                      {selectedUser.rating}
+                      4.8 {/* Fixed rating for demo */}
                     </div>
                   )}
                   {selectedUser.role === 'student' && (
@@ -160,21 +177,17 @@ export default function MapSearch({ mode, subject, budget, onClose }) {
               <div className="bg-[#121212] rounded-xl p-4 grid grid-cols-1 gap-3 text-sm border border-gray-800 mb-2">
                 <div className="flex justify-between border-b border-gray-800 pb-2">
                   <span className="text-gray-500">Subject</span>
-                  <span className="text-white font-bold">{selectedUser.subject}</span>
+                  <span className="text-white font-bold">{selectedUser.subject || 'All Subjects'}</span>
                 </div>
                 <div className="flex justify-between border-b border-gray-800 pb-2">
                   <span className="text-gray-500">{mode==='student'?'Fee ':'Budget'}</span>
-                  <span className="text-[#FF6B2B] font-bold">{selectedUser.fee || selectedUser.budget}</span>
+                  <span className="text-[#FF6B2B] font-bold">₹500-2000/mo</span>
                 </div>
                 {selectedUser.role === 'tutor' && (
                   <>
                     <div className="flex justify-between border-b border-gray-800 pb-2">
                       <span className="text-gray-500">Qualifications</span>
-                      <span className="text-gray-300 font-medium text-right max-w-[150px]">{selectedUser.qualifications}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Experience</span>
-                      <span className="text-white font-medium">{selectedUser.experience}</span>
+                      <span className="text-gray-300 font-medium text-right max-w-[150px]">{selectedUser.qualifications || 'B.A / B.Sc'}</span>
                     </div>
                   </>
                 )}
@@ -182,11 +195,7 @@ export default function MapSearch({ mode, subject, budget, onClose }) {
                   <>
                     <div className="flex justify-between border-b border-gray-800 pb-2">
                       <span className="text-gray-500">School</span>
-                      <span className="text-gray-300 font-medium text-right max-w-[150px]">{selectedUser.school}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Class/Grade</span>
-                      <span className="text-white font-medium">{selectedUser.grade}</span>
+                      <span className="text-gray-300 font-medium text-right max-w-[150px]">{selectedUser.school || 'Public School'}</span>
                     </div>
                   </>
                 )}
@@ -207,26 +216,7 @@ export default function MapSearch({ mode, subject, budget, onClose }) {
                   />
 
                   <button 
-                    onClick={() => {
-                      const slotVal = document.getElementById('freeSlotInput')?.value || '';
-                      if (!user) {
-                        alert("Please login first to send pings.");
-                        return;
-                      }
-                      setPingSent(true);
-                      // Send to global context with free slot
-                      receivePing({
-                        from: selectedUser.name,
-                        role: selectedUser.role,
-                        subject: selectedUser.subject,
-                        price: selectedUser.fee || selectedUser.budget,
-                        freeSlot: slotVal
-                      });
-                      
-                      setTimeout(() => {
-                        alert(`${selectedUser.name} has ACCEPTED your request! Check your Messages dashboard.`);
-                      }, 1500);
-                    }}
+                    onClick={handlePing}
                     className="w-full bg-[#FF6B2B] hover:bg-[#e85a1f] py-4 rounded-full font-bold flex items-center justify-center transition cursor-pointer shadow-lg shadow-[#FF6B2B]/20"
                   >
                     <Send size={18} className="mr-2" />
