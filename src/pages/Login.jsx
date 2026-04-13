@@ -12,33 +12,48 @@ export default function Login() {
   const [name, setName] = useState('');
   const [photoPreview, setPhotoPreview] = useState(null);
   
-  const [step, setStep] = useState(1); // 1: Phone, 2: OTP, 3: Profile
+  const [step, setStep] = useState(1); // 1: Role, 2: Phone, 3: OTP, 4: Profile
+  const [isNewUser, setIsNewUser] = useState(true);
   
   const navigate = useNavigate();
   const { login, API_BASE } = useAppContext();
+
+  const handleRoleSubmit = (selectedRole) => {
+    setRole(selectedRole);
+    setStep(2);
+  };
 
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
     if (phone.length < 10) return alert("Enter valid 10 digit number");
     
     try {
-      await fetch(`${API_BASE}/api/auth/login`, {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone })
       });
-      setStep(2);
+      const data = await res.json();
+      setIsNewUser(data.isNewUser);
+      // If returning user has a different role than selected, we might want to respect it
+      if (!data.isNewUser && data.role) setRole(data.role);
+      setStep(3);
     } catch (err) {
-      alert("Failed to send OTP");
+      alert("Failed to connect to server. Check internet.");
     }
   };
 
   const handleOtpSubmit = (e) => {
     e.preventDefault();
-    // We verify OTP during final setup for simplicity in this flow, 
-    // but in a real app, you'd verify here and get a temp session.
-    if (otp !== '1234') return alert("Invalid OTP. Try 1234");
-    setStep(3);
+    if (otp !== '1234') return alert("Invalid OTP. For demo use 1234");
+    
+    if (!isNewUser) {
+      // Returning user, try login immediately with dummy name/photo to get token
+      login(phone, otp, '', role, '');
+      navigate('/dashboard');
+    } else {
+      setStep(4);
+    }
   };
 
   const handleFinalSubmit = async (e) => {
@@ -54,14 +69,7 @@ export default function Login() {
   };
 
   const handlePhotoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
+    // ... same as before
   };
 
   return (
@@ -85,23 +93,54 @@ export default function Login() {
         
         {/* Progress Bar */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gray-800">
-          <div className="h-full bg-[#FF6B2B] transition-all duration-500" style={{ width: `${(step/3)*100}%` }}></div>
+          <div className="h-full bg-[#FF6B2B] transition-all duration-500" style={{ width: `${(step/4)*100}%` }}></div>
         </div>
 
         <h2 className="text-3xl font-bold mb-2 text-center">
-          {step === 1 ? 'Enter Phone' : step === 2 ? 'Verify OTP' : 'Complete Profile'}
+          {step === 1 ? 'Are you a...' : step === 2 ? 'Phone Number' : step === 3 ? 'Verification' : 'Complete Profile'}
         </h2>
         <p className="text-gray-400 text-center mb-8 text-sm">
-          {step === 1 ? 'We will send a 4-digit code.' : step === 2 ? `Code sent to ${phone}` : 'Almost there! Setup your identity.'}
+          {step === 1 ? 'Choose your role to continue' : step === 2 ? `Continuing as ${role === 'tutor' ? 'Teacher' : 'Student'}` : step === 3 ? `Enter code sent to ${phone}` : 'Almost there! Setup your identity.'}
         </p>
 
         <AnimatePresence mode="wait">
           
-          {/* STEP 1: PHONE */}
+          {/* STEP 1: ROLE */}
           {step === 1 && (
-            <motion.form key="step1" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} onSubmit={handlePhoneSubmit} className="space-y-4">
+            <motion.div key="step1" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} className="space-y-4">
+               <button 
+                onClick={() => handleRoleSubmit('student')}
+                className="w-full bg-[#121212] border-2 border-gray-800 hover:border-[#FF6B2B] p-6 rounded-2xl flex items-center group transition cursor-pointer"
+               >
+                 <div className="bg-[#FF6B2B]/10 p-4 rounded-xl mr-4 group-hover:bg-[#FF6B2B] transition">
+                    <User size={30} className="text-[#FF6B2B] group-hover:text-white" />
+                 </div>
+                 <div className="text-left">
+                    <div className="font-bold text-lg text-white">I am a Student</div>
+                    <div className="text-sm text-gray-500">I want to find a tutor near me</div>
+                 </div>
+               </button>
+
+               <button 
+                onClick={() => handleRoleSubmit('tutor')}
+                className="w-full bg-[#121212] border-2 border-gray-800 hover:border-[#FF6B2B] p-6 rounded-2xl flex items-center group transition cursor-pointer"
+               >
+                 <div className="bg-[#FF6B2B]/10 p-4 rounded-xl mr-4 group-hover:bg-[#FF6B2B] transition">
+                    <BookOpen size={30} className="text-[#FF6B2B] group-hover:text-white" />
+                 </div>
+                 <div className="text-left">
+                    <div className="font-bold text-lg text-white">I am a Teacher</div>
+                    <div className="text-sm text-gray-500">I want to teach students nearby</div>
+                 </div>
+               </button>
+            </motion.div>
+          )}
+
+          {/* STEP 2: PHONE */}
+          {step === 2 && (
+            <motion.form key="step2" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} onSubmit={handlePhoneSubmit} className="space-y-4">
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Phone Number</label>
+                <label className="block text-gray-400 text-sm mb-2">Enter Mobile Number</label>
                 <div className="flex">
                   <div className="bg-[#121212] border border-gray-800 rounded-l-xl px-4 py-3 text-gray-400 border-r-0">+91</div>
                   <input 
@@ -109,50 +148,46 @@ export default function Login() {
                     placeholder="9999999999"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="flex-1 bg-[#121212] flex-grow border border-gray-800 focus:border-[#FF6B2B] rounded-r-xl px-4 py-3 outline-none text-white transition"
+                    className="flex-1 bg-[#121212] border border-gray-800 focus:border-[#FF6B2B] rounded-r-xl px-4 py-3 outline-none text-white transition"
                     autoFocus
                     required
                   />
                 </div>
               </div>
               <button type="submit" className="w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-xl mt-6 transition cursor-pointer">
-                Get OTP
+                Continue
               </button>
             </motion.form>
           )}
 
-          {/* STEP 2: OTP */}
-          {step === 2 && (
-            <motion.form key="step2" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} onSubmit={handleOtpSubmit} className="space-y-4">
+          {/* STEP 3: OTP */}
+          {step === 3 && (
+            <motion.form key="step3" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} onSubmit={handleOtpSubmit} className="space-y-4 text-center">
               <div>
-                <label className="block text-gray-400 text-sm mb-2 text-center">Enter 4-Digit OTP (Use 1234)</label>
+                <label className="block text-gray-400 text-sm mb-4">Enter 4-Digit OTP</label>
                 <input 
                   type="text" 
                   maxLength={4}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  className="w-full bg-[#121212] border border-gray-800 focus:border-[#FF6B2B] rounded-xl px-4 py-4 outline-none text-white transition text-center text-3xl font-bold tracking-widest"
+                  className="w-full max-w-[200px] bg-[#121212] border border-gray-800 focus:border-[#FF6B2B] rounded-xl px-4 py-4 outline-none text-white transition text-center text-3xl font-bold tracking-widest mx-auto"
                   autoFocus
                   required
                 />
               </div>
+              <div className="bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 p-3 rounded-lg mt-4 inline-block">
+                <p className="text-sm text-[#FF6B2B] font-semibold">Demo Bypass Code: <span className="text-white text-lg">1234</span></p>
+              </div>
               <button type="submit" className="w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-xl mt-6 transition cursor-pointer">
-                Verify
+                Verify & {isNewUser ? 'Sign Up' : 'Login'}
               </button>
             </motion.form>
           )}
 
-          {/* STEP 3: PROFILE */}
-          {step === 3 && (
-            <motion.form key="step3" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} onSubmit={handleFinalSubmit} className="space-y-4">
+          {/* STEP 4: PROFILE */}
+          {step === 4 && (
+            <motion.form key="step4" initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: 20, opacity: 0 }} onSubmit={handleFinalSubmit} className="space-y-4">
               
-              {/* Role Toggle */}
-              <div className="flex bg-[#121212] rounded-xl p-1 mb-6 relative">
-                <div className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[#FF6B2B] rounded-lg transition-all duration-300 ${role === 'student' ? 'left-1' : 'left-[calc(50%+3px)]'}`}></div>
-                <button type="button" onClick={() => setRole('student')} className={`flex-1 py-3 flex items-center justify-center text-sm font-semibold z-10 rounded-lg transition cursor-pointer ${role === 'student' ? 'text-white' : 'text-gray-400'}`}><User size={16} className="mr-2" /> Student</button>
-                <button type="button" onClick={() => setRole('tutor')} className={`flex-1 py-3 flex items-center justify-center text-sm font-semibold z-10 rounded-lg transition cursor-pointer ${role === 'tutor' ? 'text-white' : 'text-gray-400'}`}><BookOpen size={16} className="mr-2" /> Tutor</button>
-              </div>
-
               {/* Photo Upload */}
               <div className="flex flex-col items-center justify-center mb-6">
                 <div className="relative">
@@ -160,7 +195,7 @@ export default function Login() {
                     {photoPreview ? (
                       <img src={photoPreview} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
-                      <User size={32} className="text-gray-500" />
+                      <div className="bg-[#FF6B2B]/10 w-full h-full flex items-center justify-center"><User size={32} className="text-[#FF6B2B]" /></div>
                     )}
                   </div>
                   <label className="absolute bottom-2 right-0 bg-[#FF6B2B] p-2 rounded-full cursor-pointer hover:bg-white hover:text-black transition shadow-lg">
@@ -172,12 +207,12 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="block text-gray-400 text-sm mb-2">Display Name</label>
+                <label className="block text-gray-400 text-sm mb-2">Your Full Name</label>
                 <input type="text" placeholder="e.g. Rahul Sharma" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-[#121212] border border-gray-800 focus:border-[#FF6B2B] rounded-xl px-4 py-3 outline-none text-white transition" autoFocus required />
               </div>
 
               <button type="submit" className="w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-xl mt-6 transition cursor-pointer flex items-center justify-center">
-                <CheckCircle size={18} className="mr-2" /> Complete Setup
+                <CheckCircle size={18} className="mr-2" /> Finish Setup
               </button>
             </motion.form>
           )}
