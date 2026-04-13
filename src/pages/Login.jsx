@@ -12,6 +12,8 @@ export default function Login() {
   const [name, setName] = useState('');
   const [photoPreview, setPhotoPreview] = useState(null);
   
+  const [step, setStep] = useState(1); // 1: Role, 2: Phone, 3: OTP, 4: Profile
+  const [isNewUser, setIsNewUser] = useState(true);
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
