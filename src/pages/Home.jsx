@@ -7,8 +7,7 @@ import { motion } from 'framer-motion';
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user } = useAppContext();
-  const [paymentPlan, setPaymentPlan] = useState(null);
+  const { user, initiatePayment } = useAppContext();
 
   return (
     <motion.div 
@@ -18,12 +17,6 @@ export default function Home() {
       transition={{ duration: 0.5 }}
       className="relative min-h-screen bg-[#121212] text-white font-sans overflow-hidden"
     >
-      <MockPaymentGateway 
-        isOpen={!!paymentPlan} 
-        onClose={() => setPaymentPlan(null)} 
-        plan={paymentPlan?.name} 
-        price={paymentPlan?.price}
-      />
       <AnimatedBackground />
       
       {/* Navbar */}
@@ -46,16 +39,16 @@ export default function Home() {
 
       {/* Hero Section */}
       <main className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 text-center">
-        <div className="mb-4 inline-block px-4 py-1.5 rounded-full border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 text-[#FF6B2B] text-sm font-semibold tracking-wide">
+        <div className="mt-20 mb-4 inline-block px-4 py-1.5 rounded-full border border-[#FF6B2B]/30 bg-[#FF6B2B]/10 text-[#FF6B2B] text-sm font-semibold tracking-wide">
           WELCOME TO TUTIONPAO.COM
         </div>
         
-        <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight max-w-4xl">
-          The Smartest Way to <br/>
+        <h1 className="text-4xl md:text-7xl font-extrabold mb-6 leading-tight max-w-4xl px-2">
+          The Smartest Way to <br className="hidden md:block" />
           <span className="text-[#FF6B2B]">Find or Teach.</span>
         </h1>
         
-        <p className="text-gray-400 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-gray-400 text-base md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed px-4">
           India's first live-matching tuition platform. Connect with tutors or students within your 5km radius instantly. Skip the middleman, negotiate directly.
         </p>
 
@@ -69,7 +62,7 @@ export default function Home() {
         {/* Pricing Peek */}
         <div className="mt-20 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full">
           <div 
-            onClick={() => setPaymentPlan({ name: 'Student', price: 49 })}
+            onClick={() => initiatePayment(49, 'Student')}
             className="bg-[#1E1E1E]/60 backdrop-blur border border-gray-800 rounded-3xl p-6 text-left relative overflow-hidden group hover:border-[#FF6B2B]/50 transition cursor-pointer"
           >
             <h3 className="text-[#FF6B2B] font-bold text-xl mb-1">Student Plan</h3>
@@ -78,7 +71,7 @@ export default function Home() {
             <button className="text-sm font-bold text-white group-hover:text-[#FF6B2B] transition underline">Subscribe Now</button>
           </div>
           <div 
-            onClick={() => setPaymentPlan({ name: 'Tutor', price: 199 })}
+            onClick={() => initiatePayment(199, 'Tutor')}
             className="bg-[#1E1E1E]/60 backdrop-blur border border-[#FF6B2B]/20 rounded-3xl p-6 text-left relative overflow-hidden group hover:border-[#FF6B2B] transition cursor-pointer"
           >
             <div className="absolute top-0 right-0 bg-[#FF6B2B] text-xs font-bold px-3 py-1 rounded-bl-xl">POPULAR</div>

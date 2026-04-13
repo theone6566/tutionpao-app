@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 const AppContext = createContext();
 
 // Railway Backend Public URL
-const API_BASE = "http://tutionpao-backend-production.up.railway.app"; 
+const API_BASE = "https://tutionpao-backend-production.up.railway.app"; 
 
 export function AppProvider({ children }) {
   const [user, setUser] = useState(() => {
