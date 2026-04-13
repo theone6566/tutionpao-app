@@ -1,10 +1,22 @@
-import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { HiCheckCircle, HiArrowRight } from 'react-icons/hi';
-import { subscriptionPlans } from '../data/mockData';
-import './Pricing.css';
+import { useAppContext } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
 
 const Pricing = () => {
+  const { initiatePayment, user } = useAppContext();
+  const navigate = useNavigate();
+
+  const handlePlanSelection = (plan) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (user.role === 'student') {
+      alert("Students don't need a subscription! You can search for free.");
+      return;
+    }
+    initiatePayment(plan.price, plan.name);
+  };
+
   return (
     <div className="pricing-page">
       <section className="pricing-hero">
@@ -54,9 +66,13 @@ const Pricing = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to="/auth?mode=register" className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'} btn-lg`} style={{ width: '100%' }}>
-                  Get Started <HiArrowRight />
-                </Link>
+                <button 
+                  onClick={() => handlePlanSelection(plan)} 
+                  className={`btn ${plan.popular ? 'btn-primary' : 'btn-secondary'} btn-lg cursor-pointer`} 
+                  style={{ width: '100%' }}
+                >
+                  {user?.isSubscribed ? 'Change Plan' : 'Get Started'} <HiArrowRight />
+                </button>
               </motion.div>
             ))}
           </div>

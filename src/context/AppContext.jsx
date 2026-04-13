@@ -97,9 +97,70 @@ export function AppProvider({ children }) {
     }
   };
 
+  const initiatePayment = async (amount, planName) => {
+    if (!user) throw new Error("Please login first");
+
+    try {
+      // 1. Create order on backend
+      const orderRes = await fetch(`${API_BASE}/api/payment/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, plan: planName })
+      });
+      const orderData = await orderRes.json();
+
+      if (orderData.error) throw new Error(orderData.error);
+
+      // 2. Open Razorpay Checkout
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "TutionPao Premium",
+        description: `Subscription for ${planName} plan`,
+        order_id: orderData.id,
+        handler: async (response) => {
+          // 3. Verify Payment
+          const verifyRes = await fetch(`${API_BASE}/api/payment/verify-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user._id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          });
+
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            alert("Payment Successful! You are now a Premium Tutor.");
+            // Update local user state
+            const updatedUser = { ...user, isSubscribed: true };
+            setUser(updatedUser);
+            localStorage.setItem('tutionpao_user', JSON.stringify(updatedUser));
+          } else {
+            alert("Payment verification failed. Please contact support.");
+          }
+        },
+        prefill: {
+          name: user.name,
+          contact: user.phone
+        },
+        theme: { color: "#FF6B2B" }
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error("Payment Error:", err);
+      alert(err.message || "Failed to initiate payment");
+    }
+  };
+
   return (
     <AppContext.Provider value={{ 
-      user, login, logout, messages, sendPing, updateMessageStatus, API_BASE 
+      user, login, logout, messages, sendPing, updateMessageStatus, API_BASE, initiatePayment
     }}>
       {children}
     </AppContext.Provider>
