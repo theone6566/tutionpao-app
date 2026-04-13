@@ -1,0 +1,54 @@
+.become-tutor-page { padding-top: 80px; }
+
+.bt-hero { position: relative; padding: 80px 0 60px; overflow: hidden; text-align: center; }
+.bt-hero__bg { position: absolute; inset: 0; }
+.bt-hero__orb { position: absolute; border-radius: 50%; filter: blur(100px); }
+.bt-hero__orb--1 { width: 500px; height: 500px; top: -150px; left: -100px; background: radial-gradient(circle, rgba(249,115,22,0.3) 0%, transparent 70%); animation: float 8s ease-in-out infinite; }
+.bt-hero__orb--2 { width: 400px; height: 400px; bottom: -100px; right: -100px; background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%); animation: float 10s ease-in-out infinite reverse; }
+
+.bt-hero__content { position: relative; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.bt-hero__title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; letter-spacing: -1.5px; line-height: 1.1; }
+.bt-hero__subtitle { color: var(--neutral-400); font-size: 1.1rem; max-width: 600px; line-height: 1.7; }
+.bt-hero__actions { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+.bt-benefits__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.bt-benefit-card { padding: 32px 24px; display: flex; flex-direction: column; gap: 12px; }
+.bt-benefit-card__icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); background: rgba(249,115,22,0.1); color: var(--primary-400); }
+.bt-benefit-card h3 { font-size: 1.1rem; font-weight: 700; }
+.bt-benefit-card p { font-size: 0.9rem; color: var(--neutral-400); line-height: 1.6; }
+
+.bt-steps__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.bt-step-card { padding: 32px 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.bt-step-card__num { font-size: 2.5rem; font-weight: 900; font-family: var(--font-heading); }
+.bt-step-card h3 { font-size: 1.05rem; font-weight: 700; }
+.bt-step-card p { font-size: 0.9rem; color: var(--neutral-400); line-height: 1.6; }
+
+.bt-plans__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: start; }
+.bt-plan-card { padding: 36px 28px; display: flex; flex-direction: column; gap: 20px; position: relative; }
+.bt-plan-card--popular { border-color: rgba(249,115,22,0.4); box-shadow: 0 0 40px rgba(249,115,22,0.1); }
+.bt-plan-card__badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); padding: 5px 20px; border-radius: var(--radius-full); background: var(--gradient-primary); color: white; font-size: 0.75rem; font-weight: 700; white-space: nowrap; }
+.bt-plan-card__name { font-size: 1.3rem; font-weight: 700; }
+.bt-plan-card__desc { font-size: 0.9rem; color: var(--neutral-500); }
+.bt-plan-card__price { display: flex; align-items: baseline; gap: 2px; }
+.bt-plan-card__currency { font-size: 1.3rem; font-weight: 700; color: var(--primary-400); }
+.bt-plan-card__amount { font-size: 3rem; font-weight: 900; font-family: var(--font-heading); line-height: 1; }
+.bt-plan-card__period { font-size: 0.9rem; color: var(--neutral-500); }
+.bt-plan-card__features { display: flex; flex-direction: column; gap: 10px; }
+.bt-plan-card__features li { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: var(--neutral-300); }
+.bt-plan-card__features li svg { color: var(--success); flex-shrink: 0; }
+.bt-plan-card__features li.disabled { color: var(--neutral-600); }
+.bt-plan-card__features li.disabled svg { color: var(--neutral-700); }
+
+.bt-cta__card { padding: 80px 40px; border-radius: var(--radius-xl); background: var(--gradient-hero); border: 1px solid rgba(255,255,255,0.08); text-align: center; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.bt-cta__card h2 { font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 800; }
+.bt-cta__card p { color: var(--neutral-400); font-size: 1.1rem; }
+
+@media (max-width: 1024px) {
+  .bt-benefits__grid { grid-template-columns: repeat(2, 1fr); }
+  .bt-steps__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .bt-benefits__grid, .bt-steps__grid, .bt-plans__grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+  .bt-cta__card { padding: 48px 24px; }
+}

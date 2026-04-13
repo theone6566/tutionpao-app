@@ -1,0 +1,221 @@
+.find-tutors-page {
+  padding-top: 80px;
+  min-height: 100vh;
+}
+
+.find-tutors-hero {
+  padding: 60px 0 40px;
+  text-align: center;
+  background: linear-gradient(180deg, var(--neutral-950) 0%, rgba(15,23,42,1) 100%);
+}
+
+.find-tutors-hero__title {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 10px;
+}
+
+.find-tutors-hero__subtitle {
+  color: var(--neutral-400);
+  font-size: 1.05rem;
+  margin-bottom: 32px;
+}
+
+.find-tutors-search {
+  display: flex;
+  gap: 12px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.find-tutors-search__inner {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 4px 4px 4px 18px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+}
+
+.find-tutors-search__inner:focus-within {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.find-tutors-search__icon {
+  color: var(--neutral-500);
+  flex-shrink: 0;
+}
+
+.find-tutors-search__input {
+  flex: 1;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  color: var(--neutral-100);
+  font-size: 0.95rem;
+  outline: none;
+  font-family: var(--font-body);
+}
+
+.find-tutors-search__input::placeholder {
+  color: var(--neutral-500);
+}
+
+.find-tutors-search__clear {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: var(--neutral-400);
+  padding: 8px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  margin-right: 8px;
+}
+
+.find-tutors-search__filter-btn.active {
+  border-color: var(--primary-500);
+  color: var(--primary-400);
+  background: rgba(249, 115, 22, 0.1);
+}
+
+.find-tutors-content {
+  padding-bottom: 80px;
+}
+
+.find-tutors-filters {
+  padding: 28px;
+  margin-bottom: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow: hidden;
+}
+
+.find-tutors-filters__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.find-tutors-filters__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--neutral-400);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.find-tutors-filters__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.find-tutors-filters__tag {
+  padding: 7px 16px;
+  border-radius: var(--radius-full);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--neutral-400);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-family: var(--font-body);
+}
+
+.find-tutors-filters__tag:hover {
+  color: var(--primary-400);
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.find-tutors-filters__tag.active {
+  background: rgba(249, 115, 22, 0.15);
+  color: var(--primary-400);
+  border-color: rgba(249, 115, 22, 0.4);
+}
+
+.find-tutors-filters__tag.spec.active {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent-400);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.find-tutors-results-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.find-tutors-results-count {
+  font-size: 0.9rem;
+  color: var(--neutral-500);
+}
+
+.find-tutors-active-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.find-tutors-active-filters .badge button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 4px;
+  display: flex;
+}
+
+.find-tutors-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.find-tutors-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.find-tutors-empty__icon {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.find-tutors-empty h3 {
+  font-size: 1.3rem;
+}
+
+.find-tutors-empty p {
+  color: var(--neutral-500);
+}
+
+@media (max-width: 1024px) {
+  .find-tutors-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .find-tutors-search {
+    flex-direction: column;
+  }
+
+  .find-tutors-grid {
+    grid-template-columns: 1fr;
+    max-width: 450px;
+    margin: 0 auto;
+  }
+}
