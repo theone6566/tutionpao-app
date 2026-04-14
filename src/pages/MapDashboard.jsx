@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, MapPin, ArrowLeft, MessageSquare, Menu, X, Bell, User, BookmarkPlus, Settings, LogOut, Crown, Heart, List } from 'lucide-react';
+import { Search, MapPin, ArrowLeft, MessageSquare, Menu, X, Bell, User, BookmarkPlus, Settings, LogOut, Crown, Heart, List, RefreshCw } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import MapView from '../components/MapView';
 
 export default function MapDashboard() {
-  const { user, role, logout, unreadNotifications, notifications, markNotificationRead, saveProfile, unsaveProfile, savedProfiles, sendPing, emitNearbySearch, updateLocation, API_BASE } = useAppContext();
+  const { user, role, logout, unreadNotifications, notifications, markNotificationRead, saveProfile, unsaveProfile, savedProfiles, sendPing, emitNearbySearch, updateLocation, API_BASE, hasOtherRole, otherRole, switchRole, registerOtherRole } = useAppContext();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState(role === 'teacher' ? 'teacher' : 'student');
@@ -117,6 +117,46 @@ export default function MapDashboard() {
                   <div className="flex items-center text-xs text-[#FF6B2B] font-semibold bg-[#FF6B2B]/10 px-3 py-1.5 rounded-full inline-flex">
                     <Crown size={12} className="mr-1" /> Premium Member
                   </div>
+                )}
+
+                {/* DUAL ROLE SWITCHER */}
+                {hasOtherRole && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const result = await switchRole();
+                        if (result?.needsRegister) {
+                          if (confirm(`Register as ${otherRole} too?`)) {
+                            await registerOtherRole(otherRole);
+                            window.location.reload();
+                          }
+                        } else {
+                          window.location.reload();
+                        }
+                      } catch (err) { alert(err.message); }
+                    }}
+                    className="mt-3 w-full flex items-center justify-center text-xs font-bold bg-[#252525] hover:bg-[#333] px-3 py-2 rounded-xl border border-gray-700 cursor-pointer transition"
+                  >
+                    <RefreshCw size={12} className="mr-1.5 text-[#FF6B2B]" />
+                    Switch to {otherRole === 'teacher' ? 'Teacher' : 'Student'} Mode
+                  </button>
+                )}
+
+                {!hasOtherRole && (
+                  <button
+                    onClick={async () => {
+                      const newRole = role === 'teacher' ? 'student' : 'teacher';
+                      if (confirm(`Also register as ${newRole}? You can switch between both roles anytime.`)) {
+                        try {
+                          await registerOtherRole(newRole);
+                          window.location.reload();
+                        } catch (err) { alert(err.message); }
+                      }
+                    }}
+                    className="mt-3 w-full flex items-center justify-center text-xs font-bold bg-[#252525] hover:bg-[#333] px-3 py-2 rounded-xl border border-gray-700 cursor-pointer transition text-gray-400"
+                  >
+                    + Also become a {role === 'teacher' ? 'Student' : 'Teacher'}
+                  </button>
                 )}
               </div>
 

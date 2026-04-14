@@ -3,7 +3,6 @@ import { io } from 'socket.io-client';
 
 const AppContext = createContext();
 
-// Railway Backend
 const API_BASE = "https://tutionpao-backend-production.up.railway.app";
 
 export function AppProvider({ children }) {
@@ -21,24 +20,20 @@ export function AppProvider({ children }) {
     return saved !== null ? JSON.parse(saved) : true;
   });
 
-  // ─── Socket.io Connection ──────────────────────────────────
+  // Dual role state
+  const [hasOtherRole, setHasOtherRole] = useState(false);
+  const [otherRole, setOtherRole] = useState(null);
+
+  // ─── Socket.io ──────────────────────────────────────────
   useEffect(() => {
     if (user && user._id) {
       const newSocket = io(API_BASE);
       setSocket(newSocket);
       newSocket.emit('join', user._id);
 
-      newSocket.on('new_request', (data) => {
-        setMessages(prev => [data, ...prev]);
-      });
-
-      newSocket.on('receive_message', (data) => {
-        fetchMessages();
-      });
-
-      newSocket.on('new_notification', (notif) => {
-        setNotifications(prev => [notif, ...prev]);
-      });
+      newSocket.on('new_request', (data) => setMessages(prev => [data, ...prev]));
+      newSocket.on('receive_message', () => fetchMessages());
+      newSocket.on('new_notification', (notif) => setNotifications(prev => [notif, ...prev]));
 
       return () => newSocket.close();
     }
@@ -51,14 +46,10 @@ export function AppProvider({ children }) {
       const res = await fetch(`${API_BASE}/api/chat/threads/${role}/${user._id}`);
       const data = await res.json();
       if (Array.isArray(data)) setMessages(data);
-    } catch (err) {
-      console.error("Message Fetch Error:", err);
-    }
+    } catch (err) { console.error("Message Fetch Error:", err); }
   }, [user, role]);
 
-  useEffect(() => {
-    fetchMessages();
-  }, [fetchMessages]);
+  useEffect(() => { fetchMessages(); }, [fetchMessages]);
 
   // ─── Fetch Notifications ──────────────────────────────────
   const fetchNotifications = useCallback(async () => {
@@ -67,14 +58,10 @@ export function AppProvider({ children }) {
       const res = await fetch(`${API_BASE}/api/notifications/${role}/${user._id}`);
       const data = await res.json();
       if (Array.isArray(data)) setNotifications(data);
-    } catch (err) {
-      console.error("Notification Fetch Error:", err);
-    }
+    } catch (err) { console.error("Notification Fetch Error:", err); }
   }, [user, role]);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
   // ─── Fetch Saved Profiles ──────────────────────────────────
   const fetchSavedProfiles = useCallback(async () => {
@@ -83,30 +70,24 @@ export function AppProvider({ children }) {
       const res = await fetch(`${API_BASE}/api/auth/saved/${role}/${user._id}`);
       const data = await res.json();
       if (Array.isArray(data)) setSavedProfiles(data);
-    } catch (err) {
-      console.error("Saved Profiles Error:", err);
-    }
+    } catch (err) { console.error("Saved Profiles Error:", err); }
   }, [user, role]);
 
-  useEffect(() => {
-    fetchSavedProfiles();
-  }, [fetchSavedProfiles]);
+  useEffect(() => { fetchSavedProfiles(); }, [fetchSavedProfiles]);
 
-  // ─── Login (OTP Step 1) ──────────────────────────────────
+  // ─── Send OTP ──────────────────────────────────────────────
   const sendOtp = async (phone, selectedRole) => {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone, role: selectedRole })
     });
     return await res.json();
   };
 
-  // ─── Verify OTP & Login (Step 2) ──────────────────────────
+  // ─── Verify OTP ────────────────────────────────────────────
   const verifyOtp = async (phone, otp, name, selectedRole, photo) => {
     const res = await fetch(`${API_BASE}/api/auth/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ phone, otp, name, role: selectedRole, photo })
     });
     const data = await res.json();
@@ -114,17 +95,65 @@ export function AppProvider({ children }) {
 
     setUser(data.user);
     setRole(selectedRole);
+    setHasOtherRole(data.hasOtherRole || false);
+    setOtherRole(data.otherRole || null);
     localStorage.setItem('tutionpao_token', data.token);
     localStorage.setItem('tutionpao_user', JSON.stringify(data.user));
     localStorage.setItem('tutionpao_role', selectedRole);
     return data.user;
   };
 
-  // ─── Complete Profile (after subscription) ──────────────
+  // ─── Switch Role (dual role) ───────────────────────────────
+  const switchRole = async () => {
+    if (!user || !otherRole) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/switch-role`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: user.phone, targetRole: otherRole })
+      });
+      const data = await res.json();
+      if (data.error) {
+        if (data.needsRegister) return { needsRegister: true, targetRole: otherRole };
+        throw new Error(data.error);
+      }
+
+      setUser(data.user);
+      setRole(otherRole);
+      setHasOtherRole(data.hasOtherRole || false);
+      setOtherRole(data.otherRole || null);
+      localStorage.setItem('tutionpao_token', data.token);
+      localStorage.setItem('tutionpao_user', JSON.stringify(data.user));
+      localStorage.setItem('tutionpao_role', otherRole);
+      return { success: true };
+    } catch (err) { throw err; }
+  };
+
+  // ─── Register Other Role ──────────────────────────────────
+  const registerOtherRole = async (newRole) => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/register-other-role`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: user.phone, newRole, name: user.name, photo: user.photo })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      setUser(data.user);
+      setRole(newRole);
+      setHasOtherRole(true);
+      setOtherRole(role); // old role becomes the other
+      localStorage.setItem('tutionpao_token', data.token);
+      localStorage.setItem('tutionpao_user', JSON.stringify(data.user));
+      localStorage.setItem('tutionpao_role', newRole);
+      return data;
+    } catch (err) { throw err; }
+  };
+
+  // ─── Complete Profile ──────────────────────────────────────
   const completeProfile = async (profileData) => {
     const res = await fetch(`${API_BASE}/api/auth/complete-profile`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user._id, role, ...profileData })
     });
     const data = await res.json();
@@ -134,11 +163,10 @@ export function AppProvider({ children }) {
     return data.user;
   };
 
-  // ─── Update Profile ──────────────────────────────────────
+  // ─── Update Profile ────────────────────────────────────────
   const updateProfile = async (updates) => {
     const res = await fetch(`${API_BASE}/api/auth/profile`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user._id, role, ...updates })
     });
     const data = await res.json();
@@ -148,7 +176,7 @@ export function AppProvider({ children }) {
     return data.user;
   };
 
-  // ─── Refresh User from server ─────────────────────────────
+  // ─── Refresh User ──────────────────────────────────────────
   const refreshUser = async () => {
     if (!user || !role) return;
     try {
@@ -156,115 +184,98 @@ export function AppProvider({ children }) {
       const data = await res.json();
       if (data && data._id) {
         setUser(data);
+        setHasOtherRole(data.hasOtherRole || false);
+        setOtherRole(data.otherRole || null);
         localStorage.setItem('tutionpao_user', JSON.stringify(data));
       }
-    } catch (err) {
-      console.error("Refresh user error:", err);
-    }
+    } catch (err) { console.error("Refresh user error:", err); }
   };
 
-  // ─── Logout ───────────────────────────────────────────────
+  // ─── Logout ────────────────────────────────────────────────
   const logout = () => {
-    setUser(null);
-    setRole(null);
-    setMessages([]);
-    setNotifications([]);
-    setSavedProfiles([]);
+    setUser(null); setRole(null); setMessages([]); setNotifications([]);
+    setSavedProfiles([]); setHasOtherRole(false); setOtherRole(null);
     localStorage.removeItem('tutionpao_user');
     localStorage.removeItem('tutionpao_token');
     localStorage.removeItem('tutionpao_role');
   };
 
-  // ─── Send Ping (connection request) ───────────────────────
+  // ─── Send Ping ─────────────────────────────────────────────
   const sendPing = (receiverId, receiverRole, freeSlot) => {
     if (socket && user) {
-      socket.emit('send_ping', {
-        senderId: user._id,
-        senderRole: role,
-        receiverId,
-        receiverRole,
-        freeSlot
-      });
+      socket.emit('send_ping', { senderId: user._id, senderRole: role, receiverId, receiverRole, freeSlot });
     }
   };
 
-  // ─── Send Message ─────────────────────────────────────────
+  // ─── Send Message ──────────────────────────────────────────
   const sendMessage = (threadId, receiverId, text) => {
     if (socket && user) {
-      socket.emit('send_message', {
-        threadId,
-        senderId: user._id,
-        receiverId,
-        text
-      });
+      socket.emit('send_message', { threadId, senderId: user._id, receiverId, text });
     }
   };
 
-  // ─── Update Message Status ────────────────────────────────
+  // ─── Update Message Status ─────────────────────────────────
   const updateMessageStatus = async (threadId, status, freeSlot) => {
     try {
       await fetch(`${API_BASE}/api/chat/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ threadId, status, freeSlot })
       });
       fetchMessages();
-    } catch (err) {
-      console.error("Status Update Error:", err);
-    }
+    } catch (err) { console.error("Status Update Error:", err); }
   };
 
-  // ─── Save Profile (Add to List) ──────────────────────────
+  // ─── Save/Unsave Profile ──────────────────────────────────
   const saveProfile = async (targetId) => {
     try {
       await fetch(`${API_BASE}/api/auth/save-profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user._id, role, targetId })
       });
       fetchSavedProfiles();
-    } catch (err) {
-      console.error("Save profile error:", err);
-    }
+    } catch (err) { console.error("Save profile error:", err); }
   };
 
-  // ─── Unsave Profile ───────────────────────────────────────
   const unsaveProfile = async (targetId) => {
     try {
       await fetch(`${API_BASE}/api/auth/unsave-profile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user._id, role, targetId })
       });
       fetchSavedProfiles();
-    } catch (err) {
-      console.error("Unsave profile error:", err);
-    }
+    } catch (err) { console.error("Unsave profile error:", err); }
   };
 
-  // ─── Notify Nearby Search ─────────────────────────────────
+  // ─── Log Search ────────────────────────────────────────────
+  const logSearch = async (lookingFor, lat, lng, subject, range) => {
+    try {
+      await fetch(`${API_BASE}/api/auth/public/log-search`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lookingFor, lat, lng, subject, range,
+          searcherId: user?._id || null,
+          searcherType: role || 'guest'
+        })
+      });
+    } catch (err) { console.error("Log search error:", err); }
+  };
+
+  // ─── Nearby Search Notification ────────────────────────────
   const emitNearbySearch = (lat, lng, subject) => {
     if (socket && user) {
-      socket.emit('nearby_search', {
-        searcherId: user._id,
-        searcherRole: role,
-        lat, lng, subject
-      });
+      socket.emit('nearby_search', { searcherId: user._id, searcherRole: role, lat, lng, subject });
     }
   };
 
-  // ─── Mark Notification Read ───────────────────────────────
+  // ─── Mark Notification Read ────────────────────────────────
   const markNotificationRead = async (notificationId) => {
     try {
       await fetch(`${API_BASE}/api/notifications/read`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ notificationId })
       });
       setNotifications(prev => prev.map(n => n._id === notificationId ? { ...n, isRead: true } : n));
-    } catch (err) {
-      console.error("Mark read error:", err);
-    }
+    } catch (err) { console.error("Mark read error:", err); }
   };
 
   // ─── Update Location ──────────────────────────────────────
@@ -272,23 +283,18 @@ export function AppProvider({ children }) {
     if (!user) return;
     try {
       await fetch(`${API_BASE}/api/auth/location`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user._id, role, lat, lng })
       });
-    } catch (err) {
-      console.error("Location update error:", err);
-    }
+    } catch (err) { console.error("Location update error:", err); }
   };
 
-  // ─── Initiate Razorpay Payment ────────────────────────────
+  // ─── Payment ───────────────────────────────────────────────
   const initiatePayment = async (amount, planName) => {
     if (!user) throw new Error("Please login first");
-
     try {
       const orderRes = await fetch(`${API_BASE}/api/payment/create-order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, plan: planName })
       });
       const orderData = await orderRes.json();
@@ -296,19 +302,14 @@ export function AppProvider({ children }) {
 
       return new Promise((resolve, reject) => {
         const options = {
-          key: orderData.key_id,
-          amount: orderData.amount,
-          currency: orderData.currency,
-          name: "TutionPao Premium",
-          description: `${planName} Plan Subscription`,
+          key: orderData.key_id, amount: orderData.amount, currency: orderData.currency,
+          name: "TutionPao Premium", description: `${planName} Plan`,
           order_id: orderData.id,
           handler: async (response) => {
             const verifyRes = await fetch(`${API_BASE}/api/payment/verify-payment`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                userId: user._id,
-                role,
+                userId: user._id, role,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature
@@ -320,25 +321,15 @@ export function AppProvider({ children }) {
               setUser(updatedUser);
               localStorage.setItem('tutionpao_user', JSON.stringify(updatedUser));
               resolve(true);
-            } else {
-              reject(new Error("Payment verification failed"));
-            }
+            } else { reject(new Error("Payment verification failed")); }
           },
-          prefill: {
-            name: user.name,
-            contact: user.phone,
-            method: 'upi'
-          },
+          prefill: { name: user.name, contact: user.phone, method: 'upi' },
           theme: { color: "#FF6B2B" }
         };
-
         const rzp = new window.Razorpay(options);
         rzp.open();
       });
-    } catch (err) {
-      console.error("Payment Error:", err);
-      throw err;
-    }
+    } catch (err) { throw err; }
   };
 
   // ─── Toggle Dark Mode ─────────────────────────────────────
@@ -354,12 +345,13 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       user, role, messages, notifications, savedProfiles, darkMode, socket,
-      unreadNotifications, API_BASE,
+      unreadNotifications, API_BASE, hasOtherRole, otherRole,
       sendOtp, verifyOtp, completeProfile, updateProfile, refreshUser,
       logout, sendPing, sendMessage, updateMessageStatus,
       saveProfile, unsaveProfile, fetchSavedProfiles,
-      emitNearbySearch, markNotificationRead,
-      updateLocation, initiatePayment, toggleDarkMode, fetchMessages
+      emitNearbySearch, markNotificationRead, logSearch,
+      updateLocation, initiatePayment, toggleDarkMode, fetchMessages,
+      switchRole, registerOtherRole,
     }}>
       {children}
     </AppContext.Provider>
