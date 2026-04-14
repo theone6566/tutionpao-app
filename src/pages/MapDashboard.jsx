@@ -10,7 +10,7 @@ export default function MapDashboard() {
   const { user, role, logout, unreadNotifications, notifications, markNotificationRead, saveProfile, unsaveProfile, savedProfiles, sendPing, updateLocation, API_BASE, hasOtherRole, otherRole, switchRole, registerOtherRole } = useAppContext();
   const navigate = useNavigate();
 
-  const lookingFor = role === 'teacher' ? 'student' : 'teacher';
+  const [lookingFor, setLookingFor] = useState(role === 'teacher' ? 'student' : 'teacher');
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -238,6 +238,11 @@ export default function MapDashboard() {
         </div>
 
         <div className="flex items-center space-x-2">
+          <button onClick={() => setLookingFor(prev => prev === 'teacher' ? 'student' : 'teacher')}
+            className="text-xs bg-[#1E1E1E] px-3 py-2 rounded-xl border border-gray-800 cursor-pointer font-semibold text-gray-400 hover:text-white transition">
+            {lookingFor === 'teacher' ? 'Students →' : 'Teachers →'}
+          </button>
+
           {/* Notifications bell */}
           <button onClick={() => setNotifOpen(true)} className="relative p-2 bg-[#1E1E1E] rounded-xl hover:bg-gray-800 transition cursor-pointer hidden sm:block border border-gray-800">
             <Bell size={16} className="text-gray-400" />
