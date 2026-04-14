@@ -21,7 +21,7 @@ export default function Login() {
   const [alreadyRegisteredAs, setAlreadyRegisteredAs] = useState(null);
 
   const navigate = useNavigate();
-  const { sendOtp, verifyOtp } = useAppContext();
+  const { sendOtp, verifyOtp, updateProfile } = useAppContext();
 
   // Step 1: Choose role
   const handleRoleSubmit = (role) => {
@@ -94,10 +94,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Update the profile with name and photo
-      const { updateProfile } = await import('../context/AppContext.jsx').then(m => ({ updateProfile: null }));
-      // Actually we already created the user in step 3. Just update profile now.
-      // For simplicity, navigate to dashboard — profile can be edited there
+      await updateProfile({ name, photo: photoPreview });
       navigate('/dashboard');
     } catch (err) {
       alert(err.message || "Setup failed");
