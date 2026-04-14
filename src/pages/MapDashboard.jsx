@@ -22,7 +22,6 @@ export default function MapDashboard() {
   const [total, setTotal] = useState(0);
 
   // Filters
-  const [showFilters, setShowFilters] = useState(false);
   const [range, setRange] = useState(25);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
@@ -235,14 +234,6 @@ export default function MapDashboard() {
         </div>
 
         <div className="flex items-center space-x-2">
-          <button onClick={() => setShowFilters(!showFilters)}
-            className={`p-2 rounded-xl transition cursor-pointer flex items-center text-xs font-semibold ${showFilters ? 'bg-[#FF6B2B] text-white' : 'bg-[#1E1E1E] text-gray-400 border border-gray-800 hover:border-[#FF6B2B]'}`}>
-            <SlidersHorizontal size={14} className="mr-1" /> <span className="hidden sm:inline">Filters</span>
-            {(selectedSubjects.length > 0 || minPrice > 0 || maxPrice < 10000 || range !== 25) && (
-              <span className="ml-1 w-4 h-4 bg-white text-[#121212] rounded-full text-[10px] font-bold flex items-center justify-center">!</span>
-            )}
-          </button>
-
           {/* Notifications bell */}
           <button onClick={() => setNotifOpen(true)} className="relative p-2 bg-[#1E1E1E] rounded-xl hover:bg-gray-800 transition cursor-pointer hidden sm:block border border-gray-800">
             <Bell size={16} className="text-gray-400" />
@@ -257,10 +248,8 @@ export default function MapDashboard() {
       </nav>
 
       {/* ─── FILTER PANEL (Integrated from SearchPage) ───── */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="bg-[#1A1A1A] border-b border-gray-800 overflow-hidden">
-            <div className="max-w-6xl mx-auto p-4 space-y-5">
+      <div className="bg-[#1A1A1A] border-b border-gray-800 overflow-visible z-10 w-full relative">
+        <div className="max-w-6xl mx-auto p-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <div className="flex justify-between items-center mb-2">
@@ -312,10 +301,9 @@ export default function MapDashboard() {
                   <RotateCcw size={12} className="mr-1" /> Reset all filters
                 </button>
               )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
+      </div>
 
       {/* ─── LIST VIEW GRID ────────────────────────────── */}
       <div className="max-w-6xl w-full mx-auto p-4 flex-1">
