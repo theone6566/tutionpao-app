@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { HiMenu, HiX } from 'react-icons/hi';
+import { useAppContext } from '../context/AppContext';
 import './Navbar.css';
 
 const Navbar = () => {
+  const { user, logout } = useAppContext();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -18,6 +21,11 @@ const Navbar = () => {
   useEffect(() => {
     setMobileOpen(false);
   }, [location]);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const navLinks = [
     { path: '/', label: 'Home' },
@@ -67,8 +75,23 @@ const Navbar = () => {
         </div>
 
         <div className="navbar__actions">
-          <Link to="/auth" className="btn btn-secondary btn-sm">Log In</Link>
-          <Link to="/auth?mode=register" className="btn btn-primary btn-sm">Sign Up Free</Link>
+          {user ? (
+            <>
+              <Link to="/dashboard" className="btn btn-secondary btn-sm">Dashboard</Link>
+              <button 
+                onClick={handleLogout} 
+                className="btn btn-primary btn-sm"
+                style={{ padding: '0.5rem 1rem' }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="btn btn-secondary btn-sm">Log In</Link>
+              <Link to="/login" className="btn btn-primary btn-sm">Sign Up Free</Link>
+            </>
+          )}
         </div>
 
         <button
@@ -105,8 +128,23 @@ const Navbar = () => {
               </motion.div>
             ))}
             <div className="navbar__mobile-actions">
-              <Link to="/auth" className="btn btn-secondary" style={{ width: '100%' }}>Log In</Link>
-              <Link to="/auth?mode=register" className="btn btn-primary" style={{ width: '100%' }}>Sign Up Free</Link>
+              {user ? (
+                <>
+                  <Link to="/dashboard" className="btn btn-secondary" style={{ width: '100%' }}>Dashboard</Link>
+                  <button 
+                    onClick={handleLogout} 
+                    className="btn btn-primary" 
+                    style={{ width: '100%' }}
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="btn btn-secondary" style={{ width: '100%' }}>Log In</Link>
+                  <Link to="/login" className="btn btn-primary" style={{ width: '100%' }}>Sign Up Free</Link>
+                </>
+              )}
             </div>
           </motion.div>
         )}
