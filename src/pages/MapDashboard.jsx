@@ -22,7 +22,7 @@ export default function MapDashboard() {
   const [total, setTotal] = useState(0);
 
   // Filters
-  const [range, setRange] = useState(25);
+  const [range, setRange] = useState(50);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
@@ -296,8 +296,8 @@ export default function MapDashboard() {
                 </div>
               </div>
 
-              {(selectedSubjects.length > 0 || minPrice > 0 || maxPrice < 10000 || range !== 25) && (
-                <button onClick={() => { setSelectedSubjects([]); setMinPrice(0); setMaxPrice(10000); setRange(25); }} className="text-xs text-gray-500 hover:text-[#FF6B2B] cursor-pointer flex items-center">
+              {(selectedSubjects.length > 0 || minPrice > 0 || maxPrice < 10000 || range !== 50) && (
+                <button onClick={() => { setSelectedSubjects([]); setMinPrice(0); setMaxPrice(10000); setRange(50); }} className="text-xs text-gray-500 hover:text-[#FF6B2B] cursor-pointer flex items-center">
                   <RotateCcw size={12} className="mr-1" /> Reset all filters
                 </button>
               )}

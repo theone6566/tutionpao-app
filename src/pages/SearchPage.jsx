@@ -25,7 +25,7 @@ export default function SearchPage() {
 
   // Filters
   const [showFilters, setShowFilters] = useState(false);
-  const [range, setRange] = useState(25);
+  const [range, setRange] = useState(50);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [selectedSubjects, setSelectedSubjects] = useState([]);
@@ -205,7 +205,7 @@ export default function SearchPage() {
           <button onClick={() => setShowFilters(!showFilters)}
             className={`p-2 md:p-2.5 rounded-xl transition cursor-pointer flex items-center text-xs font-semibold ${showFilters ? 'bg-[#FF6B2B] text-white' : 'bg-[#1E1E1E] text-gray-400 border border-gray-800'}`}>
             <SlidersHorizontal size={14} className="mr-1" /> <span className="hidden sm:inline">Filters</span>
-            {(selectedSubjects.length > 0 || minPrice > 0 || maxPrice < 10000 || range !== 25) && (
+            {(selectedSubjects.length > 0 || minPrice > 0 || maxPrice < 10000 || range !== 50) && (
               <span className="ml-1 w-4 h-4 bg-white text-[#121212] rounded-full text-[10px] font-bold flex items-center justify-center">!</span>
             )}
           </button>
@@ -291,8 +291,8 @@ export default function SearchPage() {
               </div>
 
               {/* Reset */}
-              {(selectedSubjects.length > 0 || minPrice > 0 || maxPrice < 10000 || range !== 25) && (
-                <button onClick={() => { setSelectedSubjects([]); setMinPrice(0); setMaxPrice(10000); setRange(25); }}
+              {(selectedSubjects.length > 0 || minPrice > 0 || maxPrice < 10000 || range !== 50) && (
+                <button onClick={() => { setSelectedSubjects([]); setMinPrice(0); setMaxPrice(10000); setRange(50); }}
                   className="text-xs text-gray-500 hover:text-[#FF6B2B] cursor-pointer flex items-center">
                   <RotateCcw size={12} className="mr-1" /> Reset all filters
                 </button>
