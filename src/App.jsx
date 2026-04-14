@@ -8,6 +8,7 @@ import Messages from './pages/Messages';
 import MyList from './pages/MyList';
 import Profile from './pages/Profile';
 import SubscriptionDetails from './pages/SubscriptionDetails';
+import SearchPage from './pages/SearchPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<MapDashboard />} />
           <Route path="/messages" element={<Messages />} />
