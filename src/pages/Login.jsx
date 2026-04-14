@@ -16,6 +16,7 @@ export default function Login() {
   const [step, setStep] = useState(locationState?.role ? 2 : 1);
   const [isNewUser, setIsNewUser] = useState(true);
   const [isMock, setIsMock] = useState(false); // whether using mock OTP
+  const [mockOtpValue, setMockOtpValue] = useState(null);
   const [loading, setLoading] = useState(false);
   const [alreadyRegisteredAs, setAlreadyRegisteredAs] = useState(null);
 
@@ -37,6 +38,7 @@ export default function Login() {
       const data = await sendOtp(phone, selectedRole);
       setIsNewUser(data.isNewUser);
       setIsMock(data.mock || false);
+      setMockOtpValue(data.mockOtp || null);
       setAlreadyRegisteredAs(data.alreadyRegisteredAs || null);
       setStep(3);
     } catch (err) {
@@ -52,14 +54,28 @@ export default function Login() {
     if (otp.length < 4) return alert("Enter the OTP received on your phone");
 
     setLoading(true);
+
+    let lat, lng;
+    try {
+      if (navigator.geolocation) {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000 });
+        });
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      }
+    } catch (err) {
+      console.log('Location not available or denied during signup');
+    }
+
     try {
       if (!isNewUser) {
-        await verifyOtp(phone, otp, '', selectedRole, '');
+        await verifyOtp(phone, otp, '', selectedRole, '', lat, lng);
         navigate('/dashboard');
       } else {
         // New user — go to profile setup
         // But first verify OTP is correct by calling verify
-        await verifyOtp(phone, otp, 'New User', selectedRole, '');
+        await verifyOtp(phone, otp, 'New User', selectedRole, '', lat, lng);
         // If we got here, OTP is valid — take to dashboard (name was set as 'New User')
         // Actually let's go to step 4 for proper name
         setStep(4);
@@ -195,7 +211,10 @@ export default function Login() {
 
               {isMock && (
                 <div className="bg-[#FF6B2B]/10 border border-[#FF6B2B]/20 p-3 rounded-lg mt-2 inline-block">
-                  <p className="text-xs text-[#FF6B2B] font-semibold">🔧 Dev Mode: Check server console for OTP</p>
+                  <p className="text-xs text-[#FF6B2B] font-semibold mb-1">🔧 Dev Mode Active</p>
+                  <p className="text-sm font-bold text-white tracking-widest bg-[#121212] px-4 py-2 rounded-lg border border-gray-800">
+                    OTP: {mockOtpValue || 'Check Server Logs'}
+                  </p>
                 </div>
               )}
 

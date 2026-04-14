@@ -85,10 +85,10 @@ export function AppProvider({ children }) {
   };
 
   // ─── Verify OTP ────────────────────────────────────────────
-  const verifyOtp = async (phone, otp, name, selectedRole, photo) => {
+  const verifyOtp = async (phone, otp, name, selectedRole, photo, lat, lng) => {
     const res = await fetch(`${API_BASE}/api/auth/verify`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, otp, name, role: selectedRole, photo })
+      body: JSON.stringify({ phone, otp, name, role: selectedRole, photo, lat, lng })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
