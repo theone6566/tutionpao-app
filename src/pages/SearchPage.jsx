@@ -327,16 +327,18 @@ export default function SearchPage() {
               <motion.div key={person._id} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.03 }}
                 className="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-5 hover:border-[#FF6B2B]/30 transition group">
 
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-800 border-2 border-gray-700 flex-shrink-0">
-                    {person.photo ? <img src={person.photo} alt="" className="w-full h-full object-cover" /> :
-                      <div className="w-full h-full flex items-center justify-center"><User size={24} className="text-gray-500" /></div>}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold truncate">{person.name || 'User'}</div>
-                    <div className="text-xs text-gray-500 capitalize flex items-center">
-                      {lookingFor}
-                      {person.isSubscribed && <span className="ml-2 text-[#FF6B2B]"><Star size={10} className="inline fill-current" /> Verified</span>}
+                <div onClick={() => setSelectedProfile(person)} className="cursor-pointer">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-800 border-2 border-gray-700 flex-shrink-0">
+                      {person.photo ? <img src={person.photo} alt="" className="w-full h-full object-cover" /> :
+                        <div className="w-full h-full flex items-center justify-center"><User size={24} className="text-gray-500" /></div>}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold truncate">{person.name || 'User'}</div>
+                      <div className="text-xs text-gray-500 capitalize flex items-center">
+                        {lookingFor}
+                        {person.isSubscribed && <span className="ml-2 text-[#FF6B2B]"><Star size={10} className="inline fill-current" /> Verified</span>}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -365,8 +367,10 @@ export default function SearchPage() {
 
                   <button onClick={() => {
                     if (!user) navigate('/login');
-                    else if (!user.isSubscribed) setSelectedProfile(person);
-                    else { sendPing(person._id, lookingFor, ''); alert(`Request sent to ${person.name}!`); }
+                    else {
+                      sendPing(person._id, lookingFor, '');
+                      alert(`Request successfully sent to ${person.name || 'user'}!`);
+                    }
                   }}
                     className="py-2.5 px-4 rounded-xl font-semibold text-sm bg-[#FF6B2B] hover:bg-[#e85a1f] text-white transition cursor-pointer flex items-center">
                     <Send size={14} className="mr-1" /> Request

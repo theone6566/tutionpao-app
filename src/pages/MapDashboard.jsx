@@ -36,7 +36,7 @@ export default function MapDashboard() {
   }, [user, navigate]);
 
   // Get user's location
-  useEffect(() => {
+  const requestLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -44,6 +44,10 @@ export default function MapDashboard() {
         updateLocation(loc.lat, loc.lng);
       });
     }
+  };
+
+  useEffect(() => {
+    requestLocation();
   }, []);
 
   const fetchResults = useCallback(async () => {
@@ -247,6 +251,14 @@ export default function MapDashboard() {
         </div>
       </nav>
 
+      {/* ─── LOCATION BANNER ─────────────────────────────── */}
+      {!userLocation && (
+        <div className="bg-[#FF6B2B]/10 border-b border-[#FF6B2B]/20 py-2.5 px-4 flex justify-center items-center">
+          <span className="text-xs text-[#FF6B2B] font-semibold mr-3">Allow location to show accurate distances</span>
+          <button onClick={requestLocation} className="bg-[#FF6B2B] text-white px-3 py-1 rounded-full text-[10px] font-bold cursor-pointer hover:bg-[#e85a1f]">Enable Location</button>
+        </div>
+      )}
+
       {/* ─── FILTER PANEL (Integrated from SearchPage) ───── */}
       <div className="bg-[#1A1A1A] border-b border-gray-800 overflow-visible z-10 w-full relative">
         <div className="max-w-6xl mx-auto p-4 space-y-4">
@@ -303,7 +315,6 @@ export default function MapDashboard() {
               )}
           </div>
         </div>
-      </div>
 
       {/* ─── LIST VIEW GRID ────────────────────────────── */}
       <div className="max-w-6xl w-full mx-auto p-4 flex-1">
@@ -329,15 +340,17 @@ export default function MapDashboard() {
               <motion.div key={person._id} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.03 }}
                 className="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-4 hover:border-[#FF6B2B]/30 transition group flex flex-col">
 
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 border-2 border-gray-700 flex-shrink-0">
-                    {person.photo ? <img src={person.photo} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><User size={20} className="text-gray-500" /></div>}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold truncate">{person.name || 'User'}</div>
-                    <div className="text-xs text-gray-500 capitalize flex items-center">
-                      {lookingFor}
-                      {person.isSubscribed && <span className="ml-2 text-[#FF6B2B] flex items-center"><Star size={10} className="mr-0.5 fill-current" /> Verified</span>}
+                <div onClick={() => setSelectedProfile(person)} className="cursor-pointer">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 border-2 border-gray-700 flex-shrink-0">
+                      {person.photo ? <img src={person.photo} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><User size={20} className="text-gray-500" /></div>}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold truncate">{person.name || 'User'}</div>
+                      <div className="text-xs text-gray-500 capitalize flex items-center">
+                        {lookingFor}
+                        {person.isSubscribed && <span className="ml-2 text-[#FF6B2B] flex items-center"><Star size={10} className="mr-0.5 fill-current" /> Verified</span>}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -363,8 +376,8 @@ export default function MapDashboard() {
                   </button>
 
                   <button onClick={() => {
-                    if (!user.isSubscribed) setSelectedProfile(person);
-                    else { sendPing(person._id, lookingFor, ''); alert(`Request sent to ${person.name}!`); }
+                    sendPing(person._id, lookingFor, '');
+                    alert(`Request successfully sent to ${person.name || 'user'}!`);
                   }}
                     className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-[#FF6B2B] hover:bg-[#e85a1f] text-white transition cursor-pointer flex items-center justify-center">
                     <Send size={14} className="mr-1.5" /> Request
