@@ -22,6 +22,7 @@ export default function Login() {
 
   const navigate = useNavigate();
   const { sendOtp, verifyOtp, updateProfile } = useAppContext();
+  const redirectTo = locationState?.redirect || '/dashboard';
 
   // Step 1: Choose role
   const handleRoleSubmit = (role) => {
@@ -71,7 +72,7 @@ export default function Login() {
     try {
       if (!isNewUser) {
         await verifyOtp(phone, otp, '', selectedRole, '', lat, lng);
-        navigate('/dashboard');
+        navigate(redirectTo);
       } else {
         // New user — go to profile setup
         // But first verify OTP is correct by calling verify
@@ -95,7 +96,7 @@ export default function Login() {
     setLoading(true);
     try {
       await updateProfile({ name, photo: photoPreview });
-      navigate('/dashboard');
+      navigate(redirectTo);
     } catch (err) {
       alert(err.message || "Setup failed");
     } finally {

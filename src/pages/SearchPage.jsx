@@ -25,7 +25,7 @@ export default function SearchPage() {
 
   // Filters
   const [showFilters, setShowFilters] = useState(false);
-  const [range, setRange] = useState(10);
+  const [range, setRange] = useState(15);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [subjectText, setSubjectText] = useState('');
 
@@ -34,6 +34,10 @@ export default function SearchPage() {
     const saved = localStorage.getItem('tutionpao_cart');
     return saved ? JSON.parse(saved) : [];
   });
+
+  useEffect(() => {
+    localStorage.setItem('tutionpao_cart', JSON.stringify(cart));
+  }, [cart]);
 
   // Profile detail
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -142,6 +146,12 @@ export default function SearchPage() {
     setSubjectText(e.target.value);
   };
 
+  const resetFilters = () => {
+    setSubjectText('');
+    setMaxPrice(10000);
+    setRange(15);
+  };
+
   // ─── LOCATION PERMISSION SCREEN ──────────────────────────
   if (locationStep === 'asking') {
     return (
@@ -203,7 +213,7 @@ export default function SearchPage() {
           <button onClick={() => setShowFilters(!showFilters)}
             className={`p-2 md:p-2.5 rounded-xl transition cursor-pointer flex items-center text-xs font-semibold ${showFilters ? 'bg-[#FF6B2B] text-white' : 'bg-[#1E1E1E] text-gray-400 border border-gray-800'}`}>
             <SlidersHorizontal size={14} className="mr-1" /> <span className="hidden sm:inline">Filters</span>
-            {(subjectText || maxPrice !== 10000 || range !== 10) && (
+            {(subjectText || maxPrice !== 10000 || range !== 15) && (
               <span className="ml-1 w-4 h-4 bg-white text-[#121212] rounded-full text-[10px] font-bold flex items-center justify-center">!</span>
             )}
           </button>
@@ -296,8 +306,8 @@ export default function SearchPage() {
               </div>
 
               {/* Reset */}
-              {(subjectText || maxPrice !== 10000 || range !== 10) && (
-                <button onClick={() => { setSubjectText(''); setMaxPrice(10000); setRange(10); }}
+              {(subjectText || maxPrice !== 10000 || range !== 15) && (
+                <button onClick={resetFilters}
                   className="text-xs text-gray-500 hover:text-[#FF6B2B] cursor-pointer flex items-center">
                   <RotateCcw size={12} className="mr-1" /> Reset all filters
                 </button>
@@ -325,7 +335,7 @@ export default function SearchPage() {
             </div>
             <h2 className="text-xl font-bold mb-2">No {lookingFor}s found</h2>
             <p className="text-gray-400 text-sm mb-4 max-w-sm">Try increasing range or removing filters.</p>
-            <button onClick={() => { setRange(10); setSubjectText(''); setMaxPrice(10000); }}
+            <button onClick={resetFilters}
               className="bg-[#FF6B2B] px-6 py-2 rounded-full font-bold text-sm cursor-pointer hover:scale-105 transition">
               Reset Filters
             </button>
@@ -375,7 +385,7 @@ export default function SearchPage() {
                   </button>
 
                   <button onClick={() => {
-                    if (!user) navigate('/login');
+                    if (!user) navigate('/login', { state: { redirect: `/search?looking=${lookingFor}` } });
                     else {
                       sendPing(person._id, lookingFor, '');
                       alert(`Request successfully sent to ${person.name || 'user'}!`);

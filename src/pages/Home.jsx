@@ -88,7 +88,7 @@ export default function Home() {
 
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => navigate('/pricing')}
+                onClick={() => navigate('/search?looking=teacher')}
                 className="bg-[#1E1E1E]/80 backdrop-blur-xl border-2 border-gray-800 hover:border-[#FF6B2B] rounded-2xl p-6 text-center group transition-all hover:shadow-[0_0_40px_rgba(255,107,43,0.15)] cursor-pointer"
               >
                 <div className="bg-[#FF6B2B]/10 p-4 rounded-2xl inline-block mb-3 group-hover:bg-[#FF6B2B] transition">
@@ -99,7 +99,7 @@ export default function Home() {
               </button>
 
               <button
-                onClick={() => navigate('/pricing')}
+                onClick={() => navigate('/search?looking=student')}
                 className="bg-[#1E1E1E]/80 backdrop-blur-xl border-2 border-gray-800 hover:border-[#FF6B2B] rounded-2xl p-6 text-center group transition-all hover:shadow-[0_0_40px_rgba(255,107,43,0.15)] cursor-pointer"
               >
                 <div className="bg-[#FF6B2B]/10 p-4 rounded-2xl inline-block mb-3 group-hover:bg-[#FF6B2B] transition">
