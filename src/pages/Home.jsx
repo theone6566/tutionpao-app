@@ -88,25 +88,25 @@ export default function Home() {
 
             <div className="grid grid-cols-2 gap-4">
               <button
-                onClick={() => navigate('/search?looking=teacher')}
+                onClick={() => navigate('/pricing')}
                 className="bg-[#1E1E1E]/80 backdrop-blur-xl border-2 border-gray-800 hover:border-[#FF6B2B] rounded-2xl p-6 text-center group transition-all hover:shadow-[0_0_40px_rgba(255,107,43,0.15)] cursor-pointer"
               >
                 <div className="bg-[#FF6B2B]/10 p-4 rounded-2xl inline-block mb-3 group-hover:bg-[#FF6B2B] transition">
                   <BookOpen size={32} className="text-[#FF6B2B] group-hover:text-white" />
                 </div>
-                <div className="font-bold text-lg mb-1">Find Teachers</div>
-                <div className="text-xs text-gray-500">Browse tutors near you</div>
+                <div className="font-bold text-lg mb-1">I'm a Student</div>
+                <div className="text-xs text-gray-500">Find teachers near you</div>
               </button>
 
               <button
-                onClick={() => navigate('/search?looking=student')}
+                onClick={() => navigate('/pricing')}
                 className="bg-[#1E1E1E]/80 backdrop-blur-xl border-2 border-gray-800 hover:border-[#FF6B2B] rounded-2xl p-6 text-center group transition-all hover:shadow-[0_0_40px_rgba(255,107,43,0.15)] cursor-pointer"
               >
                 <div className="bg-[#FF6B2B]/10 p-4 rounded-2xl inline-block mb-3 group-hover:bg-[#FF6B2B] transition">
                   <Users size={32} className="text-[#FF6B2B] group-hover:text-white" />
                 </div>
-                <div className="font-bold text-lg mb-1">Find Students</div>
-                <div className="text-xs text-gray-500">Browse students near you</div>
+                <div className="font-bold text-lg mb-1">I'm a Teacher</div>
+                <div className="text-xs text-gray-500">Find students near you</div>
               </button>
             </div>
           </motion.div>

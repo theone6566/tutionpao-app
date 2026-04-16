@@ -21,7 +21,7 @@ export default function MapDashboard() {
   const [total, setTotal] = useState(0);
 
   // Filters
-  const [range, setRange] = useState(10);
+  const [range, setRange] = useState(15);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [subjectQuery, setSubjectQuery] = useState('');
 
@@ -340,8 +340,8 @@ export default function MapDashboard() {
                 ))}
               </div>
 
-              {(subjectQuery.length > 0 || maxPrice < 10000 || range !== 10) && (
-                <button onClick={() => { setSubjectQuery(''); setMaxPrice(10000); setRange(10); }} className="text-xs text-gray-500 hover:text-[#FF6B2B] cursor-pointer flex items-center">
+              {(subjectQuery.length > 0 || maxPrice < 10000 || range !== 15) && (
+                <button onClick={() => { setSubjectQuery(''); setMaxPrice(10000); setRange(15); }} className="text-xs text-gray-500 hover:text-[#FF6B2B] cursor-pointer flex items-center">
                   <RotateCcw size={12} className="mr-1" /> Reset all filters
                 </button>
               )}
@@ -366,7 +366,7 @@ export default function MapDashboard() {
             </div>
             <h2 className="text-xl font-bold mb-2">No {lookingFor}s found nearby</h2>
             <p className="text-gray-400 text-sm mb-4 max-w-sm">Try increasing your search range or modifying the budget and filters.</p>
-            <button onClick={() => { setRange(10); setSubjectQuery(''); setMaxPrice(10000); }} className="bg-[#FF6B2B] px-6 py-2 rounded-full font-bold text-sm cursor-pointer hover:scale-105 transition">
+            <button onClick={() => { setRange(15); setSubjectQuery(''); setMaxPrice(10000); }} className="bg-[#FF6B2B] px-6 py-2 rounded-full font-bold text-sm cursor-pointer hover:scale-105 transition">
               Reset Filters
             </button>
           </div>
