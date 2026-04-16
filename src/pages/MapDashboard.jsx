@@ -185,7 +185,7 @@ export default function MapDashboard() {
                   { icon: User, label: 'My Profile', action: () => { setSidebarOpen(false); navigate('/profile'); } },
                   { icon: Heart, label: 'My List', desc: `${savedProfiles.length} saved`, action: () => { setSidebarOpen(false); navigate('/my-list'); } },
                   { icon: MessageSquare, label: 'Requests & Messages', action: () => { setSidebarOpen(false); navigate('/messages'); } },
-                  { icon: Crown, label: 'Subscription', desc: user?.isSubscribed ? 'Premium' : 'Free', action: () => { setSidebarOpen(false); navigate('/'); } },
+                  { icon: Crown, label: 'Subscription', desc: user?.isSubscribed ? 'Premium' : 'Free', action: () => { setSidebarOpen(false); navigate('/pricing'); } },
                   { icon: Settings, label: 'Settings', action: () => { setSidebarOpen(false); navigate('/profile'); } },
                 ].map((item, i) => (
                   <button key={i} onClick={item.action} className="w-full flex items-center px-6 py-4 hover:bg-[#252525] transition cursor-pointer text-left">

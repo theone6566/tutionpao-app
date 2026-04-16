@@ -310,8 +310,8 @@ export default function Pricing() {
                         <CheckCircle size={40} className="text-green-500" />
                       </div>
                     </motion.div>
-                    <h3 className="text-2xl font-bold mb-2">Welcome!</h3>
-                    <p className="text-gray-400 text-sm">Payment successful. Redirecting to your dashboard...</p>
+                    <h3 className="text-2xl font-bold mb-2">Welcome to TutionPao.com!</h3>
+                    <p className="text-gray-400 text-sm">Payment successful. Your premium features are now active.</p>
                   </div>
                 )}
               </div>
