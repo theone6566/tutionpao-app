@@ -43,9 +43,14 @@ export default function Home() {
               Dashboard →
             </button>
           ) : (
-            <button onClick={() => navigate('/login')} className="bg-[#1E1E1E] hover:bg-gray-800 text-white px-5 py-2 rounded-full border border-gray-800 transition-colors cursor-pointer text-sm">
-              Login / Sign Up
-            </button>
+            <>
+              <button onClick={() => navigate('/pricing')} className="hidden sm:block text-gray-300 hover:text-white transition-colors cursor-pointer text-sm font-medium mr-2">
+                Pricing
+              </button>
+              <button onClick={() => navigate('/login')} className="bg-[#1E1E1E] hover:bg-gray-800 text-white px-5 py-2 rounded-full border border-gray-800 transition-colors cursor-pointer text-sm">
+                Login
+              </button>
+            </>
           )}
         </div>
       </nav>
@@ -107,45 +112,6 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* ─── TWO PLANS ─────────────────────────────────────── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl w-full mb-16 px-4">
-          <motion.div initial={{ x: -30, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true }}
-            className="bg-[#1E1E1E]/70 backdrop-blur-xl border border-gray-800 rounded-3xl p-8 text-left relative overflow-hidden group hover:border-[#FF6B2B]/50 transition-all hover:shadow-[0_0_60px_rgba(255,107,43,0.15)]">
-            <div className="flex items-center mb-4">
-              <div className="bg-[#FF6B2B]/10 p-3 rounded-xl mr-3"><BookOpen size={24} className="text-[#FF6B2B]" /></div>
-              <h3 className="text-[#FF6B2B] font-bold text-xl">Student Plan</h3>
-            </div>
-            <div className="text-4xl font-extrabold text-white mb-1">₹49 <span className="text-sm text-gray-500 font-normal">/ month</span></div>
-            <p className="text-gray-400 text-sm mb-6">Unlock messaging and connect with verified teachers.</p>
-            <ul className="space-y-3 mb-8">
-              {['Browse all tutors free', 'View profiles & subjects', 'Send connection requests', 'Chat with accepted tutors', 'Save tutors to your list'].map((item, i) => (
-                <li key={i} className="flex items-center text-sm text-gray-300"><CheckCircle size={16} className="text-[#FF6B2B] mr-2 flex-shrink-0" />{item}</li>
-              ))}
-            </ul>
-            <button onClick={() => navigate('/login', { state: { role: 'student' } })} className="w-full bg-[#FF6B2B] hover:bg-[#e85a1f] text-white font-bold py-4 rounded-2xl transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center">
-              Start as Student <ArrowRight size={18} className="ml-2" />
-            </button>
-          </motion.div>
-
-          <motion.div initial={{ x: 30, opacity: 0 }} whileInView={{ x: 0, opacity: 1 }} viewport={{ once: true }}
-            className="bg-[#1E1E1E]/70 backdrop-blur-xl border border-[#FF6B2B]/30 rounded-3xl p-8 text-left relative overflow-hidden group hover:border-[#FF6B2B] transition-all hover:shadow-[0_0_60px_rgba(255,107,43,0.2)]">
-            <div className="absolute top-0 right-0 bg-[#FF6B2B] text-xs font-bold px-4 py-1.5 rounded-bl-2xl">POPULAR</div>
-            <div className="flex items-center mb-4">
-              <div className="bg-[#FF6B2B]/10 p-3 rounded-xl mr-3"><Users size={24} className="text-[#FF6B2B]" /></div>
-              <h3 className="text-white font-bold text-xl">Teacher Plan</h3>
-            </div>
-            <div className="text-4xl font-extrabold text-white mb-1">₹199 <span className="text-sm text-gray-500 font-normal">/ month</span></div>
-            <p className="text-gray-400 text-sm mb-6">Grow your tuition base. Connect with students nearby.</p>
-            <ul className="space-y-3 mb-8">
-              {['Browse all students free', 'View requirements & budget', 'Send connection requests', 'Receive enquiries', 'Priority listing'].map((item, i) => (
-                <li key={i} className="flex items-center text-sm text-gray-300"><CheckCircle size={16} className="text-[#FF6B2B] mr-2 flex-shrink-0" />{item}</li>
-              ))}
-            </ul>
-            <button onClick={() => navigate('/login', { state: { role: 'teacher' } })} className="w-full bg-white hover:bg-gray-100 text-[#121212] font-bold py-4 rounded-2xl transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center justify-center">
-              Start as Teacher <ArrowRight size={18} className="ml-2" />
-            </button>
-          </motion.div>
-        </div>
 
         {/* ─── HOW IT WORKS ──────────────────────────────────── */}
         <div className="w-full max-w-5xl px-4 mb-24">
@@ -190,8 +156,8 @@ export default function Home() {
           className="w-full max-w-4xl bg-gradient-to-r from-[#FF6B2B] to-[#FF8F5E] rounded-3xl p-8 md:p-12 text-center mb-16 mx-4">
           <h2 className="text-2xl md:text-4xl font-extrabold mb-4">Ready to Get Started?</h2>
           <p className="text-white/80 mb-8 max-w-lg mx-auto">Join thousands using TutionPao.</p>
-          <button onClick={() => navigate(user ? '/dashboard' : '/login')} className="bg-white text-[#FF6B2B] font-bold text-lg px-10 py-4 rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl cursor-pointer">
-            {user ? 'Open Dashboard 📍' : 'Sign Up Free →'}
+          <button onClick={() => navigate(user ? '/dashboard' : '/pricing')} className="bg-white text-[#FF6B2B] font-bold text-lg px-10 py-4 rounded-full hover:scale-105 active:scale-95 transition-transform shadow-xl cursor-pointer">
+            {user ? 'Open Dashboard 📍' : 'View Pricing & Subscribe →'}
           </button>
         </motion.div>
       </main>

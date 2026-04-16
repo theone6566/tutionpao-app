@@ -13,6 +13,7 @@ export function AppProvider({ children }) {
   const [role, setRole] = useState(() => localStorage.getItem('tutionpao_role') || null);
   const [messages, setMessages] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [toast, setToast] = useState(null);
   const [socket, setSocket] = useState(null);
   const [savedProfiles, setSavedProfiles] = useState([]);
   const [darkMode, setDarkMode] = useState(() => {
@@ -33,7 +34,10 @@ export function AppProvider({ children }) {
 
       newSocket.on('new_request', (data) => setMessages(prev => [data, ...prev]));
       newSocket.on('receive_message', () => fetchMessages());
-      newSocket.on('new_notification', (notif) => setNotifications(prev => [notif, ...prev]));
+      newSocket.on('new_notification', (notif) => {
+        setNotifications(prev => [notif, ...prev]);
+        setToast(notif);
+      });
 
       return () => newSocket.close();
     }
@@ -345,7 +349,7 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       user, role, messages, notifications, savedProfiles, darkMode, socket,
-      unreadNotifications, API_BASE, hasOtherRole, otherRole,
+      unreadNotifications, API_BASE, hasOtherRole, otherRole, toast, setToast,
       sendOtp, verifyOtp, completeProfile, updateProfile, refreshUser,
       logout, sendPing, sendMessage, updateMessageStatus,
       saveProfile, unsaveProfile, fetchSavedProfiles,

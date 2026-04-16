@@ -4,10 +4,9 @@ import { Search, MapPin, ArrowLeft, MessageSquare, Menu, X, Bell, User, Bookmark
 import { useAppContext } from '../context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const ALL_SUBJECTS = ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'Hindi', 'Computer Science', 'Economics', 'Accounts', 'History', 'Geography', 'Political Science', 'Art', 'Music', 'Sanskrit'];
 
 export default function MapDashboard() {
-  const { user, role, logout, unreadNotifications, notifications, markNotificationRead, saveProfile, unsaveProfile, savedProfiles, sendPing, updateLocation, API_BASE, hasOtherRole, otherRole, switchRole, registerOtherRole } = useAppContext();
+  const { user, role, logout, unreadNotifications, notifications, markNotificationRead, saveProfile, unsaveProfile, savedProfiles, sendPing, updateLocation, API_BASE, hasOtherRole, otherRole, switchRole, registerOtherRole, toast, setToast } = useAppContext();
   const navigate = useNavigate();
 
   const [lookingFor, setLookingFor] = useState(role === 'teacher' ? 'student' : 'teacher');
@@ -22,10 +21,9 @@ export default function MapDashboard() {
   const [total, setTotal] = useState(0);
 
   // Filters
-  const [range, setRange] = useState(50);
-  const [minPrice, setMinPrice] = useState(0);
+  const [range, setRange] = useState(10);
   const [maxPrice, setMaxPrice] = useState(10000);
-  const [selectedSubjects, setSelectedSubjects] = useState([]);
+  const [subjectQuery, setSubjectQuery] = useState('');
 
   // Selected Profile for modal
   const [selectedProfile, setSelectedProfile] = useState(null);
@@ -34,6 +32,14 @@ export default function MapDashboard() {
   useEffect(() => {
     if (!user) navigate('/login');
   }, [user, navigate]);
+
+  // Auto-clear Toast
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast, setToast]);
 
   // Get user's location
   const requestLocation = () => {
@@ -59,8 +65,8 @@ export default function MapDashboard() {
         url += `&lat=${userLocation.lat}&lng=${userLocation.lng}&maxDistance=${range * 1000}`;
       }
 
-      if (selectedSubjects.length > 0) {
-        url += `&subject=${encodeURIComponent(selectedSubjects[0])}`;
+      if (subjectQuery.trim() !== '') {
+        url += `&subject=${encodeURIComponent(subjectQuery.trim())}`;
       }
 
       const res = await fetch(url);
@@ -70,17 +76,9 @@ export default function MapDashboard() {
       // Client-side mapping
       users = users.filter(u => {
         const price = lookingFor === 'teacher' ? (u.chargePerMonth || 0) : (u.budgetPerMonth || 0);
-        if (minPrice > 0 && price < minPrice) return false;
         if (maxPrice < 10000 && price > maxPrice) return false;
         return true;
       });
-
-      if (selectedSubjects.length > 1) {
-        users = users.filter(u => {
-          const subs = lookingFor === 'teacher' ? (u.subjects || []) : (u.subjectsNeeded || []);
-          return selectedSubjects.some(s => subs.some(us => us.toLowerCase().includes(s.toLowerCase())));
-        });
-      }
 
       setResults(users);
       setTotal(users.length);
@@ -90,15 +88,11 @@ export default function MapDashboard() {
     } finally {
       setLoading(false);
     }
-  }, [lookingFor, userLocation, range, minPrice, maxPrice, selectedSubjects]);
+  }, [lookingFor, userLocation, range, maxPrice, subjectQuery]);
 
   useEffect(() => {
     fetchResults();
   }, [fetchResults]);
-
-  const toggleSubject = (sub) => {
-    setSelectedSubjects(prev => prev.includes(sub) ? prev.filter(s => s !== sub) : [...prev, sub]);
-  };
 
   const isSaved = (id) => savedProfiles?.some(p => p._id === id);
   const handleSaveToggle = (targetId) => {
@@ -109,9 +103,33 @@ export default function MapDashboard() {
   if (!user) return null;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative min-h-screen bg-[#121212] text-white font-sans overflow-x-hidden flex flex-col">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col h-screen bg-[#121212] text-white overflow-y-auto w-full overflow-x-hidden relative">
+      
+      {/* ─── REALTIME TOAST ALERTS ───────────────── */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9, y: -20 }}
+            className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 p-4 rounded-2xl shadow-2xl border backdrop-blur-xl flex items-start max-w-sm w-[90%] md:w-full cursor-pointer ${toast.type === 'nearby_search' ? 'bg-[#FF6B2B]/90 border-[#FF6B2B] text-white shadow-[0_10px_40px_rgba(255,107,43,0.3)]' : 'bg-[#1E1E1E]/95 border-gray-700 text-white'}`}
+            onClick={() => { setToast(null); setNotifOpen(true); }}
+          >
+            <div className="bg-white/20 p-2 rounded-full mr-3 mt-0.5">
+              <Bell size={18} className="text-white" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold text-sm mb-1">{toast.title || 'New Alert'}</h4>
+              <p className="text-xs opacity-90 whitespace-pre-line leading-relaxed">{toast.message}</p>
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); setToast(null); }} className="opacity-70 hover:opacity-100 p-1 bg-black/10 rounded-full">
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* ─── HAMBURGER SIDEBAR ────────────────────────────── */}
+      {/* ─── NAVBAR ──────────────────────────────────────── */}
       <AnimatePresence>
         {sidebarOpen && (
           <>
@@ -264,57 +282,66 @@ export default function MapDashboard() {
         </div>
       )}
 
-      {/* ─── FILTER PANEL (Integrated from SearchPage) ───── */}
+      {/* ─── FILTER PANEL ───── */}
       <div className="bg-[#1A1A1A] border-b border-gray-800 overflow-visible z-10 w-full relative">
         <div className="max-w-6xl mx-auto p-4 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Distance */}
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-semibold text-gray-300">Distance</label>
-                    <span className="text-[#FF6B2B] font-bold text-sm bg-[#FF6B2B]/10 px-3 py-0.5 rounded-full">{range} km</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <button onClick={() => setRange(Math.max(1, range - 5))} className="w-9 h-9 bg-[#121212] border border-gray-700 rounded-lg flex items-center justify-center hover:border-[#FF6B2B] transition cursor-pointer"><Minus size={14} /></button>
-                    <input type="range" min="1" max="50" value={range} onChange={(e) => setRange(parseInt(e.target.value))} className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-[#FF6B2B]" />
-                    <button onClick={() => setRange(Math.min(50, range + 5))} className="w-9 h-9 bg-[#121212] border border-gray-700 rounded-lg flex items-center justify-center hover:border-[#FF6B2B] transition cursor-pointer"><Plus size={14} /></button>
+                  <label className="text-sm font-semibold text-gray-300 mb-2 block">Distance</label>
+                  <div className="flex items-center space-x-2">
+                    <button onClick={() => setRange(Math.max(1, range - 10))} className="w-10 h-10 bg-[#121212] border border-gray-700 rounded-xl flex items-center justify-center hover:border-[#FF6B2B] transition cursor-pointer text-lg font-bold"><Minus size={16} /></button>
+                    <div className="flex-1 bg-[#121212] border border-gray-700 rounded-xl px-4 py-2.5 text-center">
+                      <span className="text-[#FF6B2B] font-bold text-lg">{range}</span>
+                      <span className="text-gray-400 text-sm ml-1">km</span>
+                    </div>
+                    <button onClick={() => setRange(Math.min(50, range + 10))} className="w-10 h-10 bg-[#121212] border border-gray-700 rounded-xl flex items-center justify-center hover:border-[#FF6B2B] transition cursor-pointer text-lg font-bold"><Plus size={16} /></button>
                   </div>
                 </div>
 
+                {/* Max Price (typed input) */}
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-semibold text-gray-300">{lookingFor === 'teacher' ? 'Fee Range' : 'Budget Range'}</label>
-                    <span className="text-[#FF6B2B] font-bold text-sm">₹{minPrice} – ₹{maxPrice}</span>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center bg-[#121212] border border-gray-700 rounded-xl px-1">
-                      <button onClick={() => setMinPrice(Math.max(0, minPrice - 500))} className="p-1.5 cursor-pointer hover:text-[#FF6B2B]"><Minus size={12} /></button>
-                      <span className="text-sm font-bold min-w-[45px] text-center">₹{minPrice}</span>
-                      <button onClick={() => setMinPrice(Math.min(maxPrice, minPrice + 500))} className="p-1.5 cursor-pointer hover:text-[#FF6B2B]"><Plus size={12} /></button>
-                    </div>
-                    <span className="text-gray-600 text-xs">to</span>
-                    <div className="flex items-center bg-[#121212] border border-gray-700 rounded-xl px-1">
-                      <button onClick={() => setMaxPrice(Math.max(minPrice, maxPrice - 500))} className="p-1.5 cursor-pointer hover:text-[#FF6B2B]"><Minus size={12} /></button>
-                      <span className="text-sm font-bold min-w-[45px] text-center">₹{maxPrice}</span>
-                      <button onClick={() => setMaxPrice(maxPrice + 500)} className="p-1.5 cursor-pointer hover:text-[#FF6B2B]"><Plus size={12} /></button>
-                    </div>
-                  </div>
+                  <label className="text-sm font-semibold text-gray-300 mb-2 block">Max {lookingFor === 'teacher' ? 'Fee' : 'Budget'} (₹/month)</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 3000"
+                    value={maxPrice === 10000 ? '' : maxPrice}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') { setMaxPrice(10000); return; }
+                      const num = parseInt(val);
+                      if (!isNaN(num) && num >= 0) setMaxPrice(num);
+                    }}
+                    className="w-full bg-[#121212] border border-gray-700 focus:border-[#FF6B2B] outline-none px-4 py-2.5 rounded-xl text-white text-sm"
+                  />
+                  <p className="text-[10px] text-gray-500 mt-1">Leave empty for any price</p>
+                </div>
+
+                {/* Subject (typed input) */}
+                <div>
+                  <label className="text-sm font-semibold text-gray-300 mb-2 block">Subject</label>
+                  <input
+                    type="text"
+                    placeholder="Type a subject..."
+                    value={subjectQuery}
+                    onChange={(e) => setSubjectQuery(e.target.value)}
+                    className="w-full bg-[#121212] border border-gray-700 focus:border-[#FF6B2B] outline-none px-4 py-2.5 rounded-xl text-white text-sm"
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="text-sm font-semibold text-gray-300 mb-2 block">Filters by Subject</label>
-                <div className="flex flex-wrap gap-2">
-                  {ALL_SUBJECTS.map(sub => (
-                    <button key={sub} onClick={() => toggleSubject(sub)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer border ${selectedSubjects.includes(sub) ? 'bg-[#FF6B2B] text-white border-[#FF6B2B]' : 'bg-[#121212] text-gray-400 border-gray-700 hover:border-[#FF6B2B]'}`}>
-                      {sub}
-                    </button>
-                  ))}
-                </div>
+              {/* Quick Subject Suggestions */}
+              <div className="flex flex-wrap gap-1.5">
+                {['Mathematics', 'Physics', 'Chemistry', 'English', 'Biology', 'Computer Science', 'Hindi', 'Economics', 'Accounts'].map(sub => (
+                  <button key={sub} onClick={() => setSubjectQuery(sub)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition cursor-pointer border ${subjectQuery === sub ? 'bg-[#FF6B2B] text-white border-[#FF6B2B]' : 'bg-[#121212] text-gray-500 border-gray-800 hover:border-gray-600 hover:text-gray-300'}`}>
+                    {sub}
+                  </button>
+                ))}
               </div>
 
-              {(selectedSubjects.length > 0 || minPrice > 0 || maxPrice < 10000 || range !== 50) && (
-                <button onClick={() => { setSelectedSubjects([]); setMinPrice(0); setMaxPrice(10000); setRange(50); }} className="text-xs text-gray-500 hover:text-[#FF6B2B] cursor-pointer flex items-center">
+              {(subjectQuery.length > 0 || maxPrice < 10000 || range !== 10) && (
+                <button onClick={() => { setSubjectQuery(''); setMaxPrice(10000); setRange(10); }} className="text-xs text-gray-500 hover:text-[#FF6B2B] cursor-pointer flex items-center">
                   <RotateCcw size={12} className="mr-1" /> Reset all filters
                 </button>
               )}
@@ -322,25 +349,29 @@ export default function MapDashboard() {
         </div>
 
       {/* ─── LIST VIEW GRID ────────────────────────────── */}
-      <div className="max-w-6xl w-full mx-auto p-4 flex-1">
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader size={32} className="text-[#FF6B2B] animate-spin mb-4" />
-            <p className="text-gray-400 text-sm">Scanning {range}km radius...</p>
+      <div className="max-w-6xl w-full mx-auto p-4 flex-1 relative">
+        {loading && (
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex justify-center pointer-events-none">
+             <div className="bg-[#FF6B2B]/20 backdrop-blur-md border border-[#FF6B2B]/50 rounded-full px-5 py-2 shadow-2xl flex items-center shadow-black/50">
+                <Loader size={16} className="text-[#FF6B2B] animate-spin mr-2" />
+                <span className="text-xs font-bold text-[#FF6B2B]">Scanning {range}km radius...</span>
+             </div>
           </div>
-        ) : results.length === 0 ? (
+        )}
+
+        {results.length === 0 && !loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 bg-[#1E1E1E] rounded-full flex items-center justify-center mb-4 border border-gray-800">
               <MapPin size={32} className="text-gray-600" />
             </div>
             <h2 className="text-xl font-bold mb-2">No {lookingFor}s found nearby</h2>
             <p className="text-gray-400 text-sm mb-4 max-w-sm">Try increasing your search range or modifying the budget and filters.</p>
-            <button onClick={() => { setRange(50); setSelectedSubjects([]); setMinPrice(0); setMaxPrice(10000); }} className="bg-[#FF6B2B] px-6 py-2 rounded-full font-bold text-sm cursor-pointer hover:scale-105 transition">
+            <button onClick={() => { setRange(10); setSubjectQuery(''); setMaxPrice(10000); }} className="bg-[#FF6B2B] px-6 py-2 rounded-full font-bold text-sm cursor-pointer hover:scale-105 transition">
               Reset Filters
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 transition-opacity duration-300 ${loading ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
             {results.map((person, i) => (
               <motion.div key={person._id} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.03 }}
                 className="bg-[#1E1E1E] border border-gray-800 rounded-2xl p-4 hover:border-[#FF6B2B]/30 transition group flex flex-col">
@@ -445,7 +476,7 @@ export default function MapDashboard() {
                     <Heart size={16} className={`mr-2 ${isSaved(selectedProfile._id) ? 'fill-current' : ''}`} /> {isSaved(selectedProfile._id) ? 'In Your List ✓' : 'Add to List'}
                   </button>
 
-                  <button onClick={() => navigate('/subscription-details')}
+                  <button onClick={() => navigate('/pricing')}
                     className="w-full bg-gradient-to-r from-[#FF6B2B] to-[#FF8F5E] py-3 rounded-xl font-bold flex items-center justify-center cursor-pointer transition hover:scale-[1.02]">
                     <Crown size={16} className="mr-2" /> Verify & Subscribe
                   </button>

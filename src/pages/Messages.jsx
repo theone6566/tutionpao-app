@@ -196,7 +196,7 @@ export default function Messages() {
                       <div className="text-center w-full">
                         <Lock size={20} className="text-[#FF6B2B] mx-auto mb-1" />
                         <p className="text-xs text-gray-300 font-semibold mb-2">Subscribe to chat</p>
-                        <button onClick={() => navigate('/')} className="bg-[#FF6B2B] text-xs font-bold py-1.5 px-4 rounded-full cursor-pointer hover:scale-105 transition">
+                        <button onClick={() => navigate('/pricing')} className="bg-[#FF6B2B] text-xs font-bold py-1.5 px-4 rounded-full cursor-pointer hover:scale-105 transition">
                           <Crown size={12} className="inline mr-1" /> View Plans
                         </button>
                       </div>

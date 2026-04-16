@@ -9,13 +9,17 @@ import MyList from './pages/MyList';
 import Profile from './pages/Profile';
 import SubscriptionDetails from './pages/SubscriptionDetails';
 import SearchPage from './pages/SearchPage';
+import Pricing from './pages/Pricing';
+import GlobalToast from './components/GlobalToast';
 
 function App() {
   return (
     <AppProvider>
+      <GlobalToast />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<MapDashboard />} />
