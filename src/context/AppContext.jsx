@@ -294,12 +294,14 @@ export function AppProvider({ children }) {
   };
 
   // ─── Payment ───────────────────────────────────────────────
-  const initiatePayment = async (amount, planName) => {
-    if (!user) throw new Error("Please login first");
+  const initiatePayment = async (amount, planName, userOverride = null) => {
+    const activeUser = userOverride || user;
+    if (!activeUser) throw new Error("Please login first");
+
     try {
       const orderRes = await fetch(`${API_BASE}/api/payment/create-order`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, plan: planName })
+        body: JSON.stringify({ amount, plan: planName, userId: activeUser._id })
       });
       const orderData = await orderRes.json();
       if (orderData.error) throw new Error(orderData.error);
@@ -313,7 +315,7 @@ export function AppProvider({ children }) {
             const verifyRes = await fetch(`${API_BASE}/api/payment/verify-payment`, {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                userId: user._id, role,
+                userId: activeUser._id, role,
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature
@@ -321,13 +323,13 @@ export function AppProvider({ children }) {
             });
             const verifyData = await verifyRes.json();
             if (verifyData.success) {
-              const updatedUser = { ...user, isSubscribed: true, subscriptionPlan: 'premium' };
+              const updatedUser = { ...activeUser, isSubscribed: true, subscriptionPlan: 'premium' };
               setUser(updatedUser);
               localStorage.setItem('tutionpao_user', JSON.stringify(updatedUser));
               resolve(true);
             } else { reject(new Error("Payment verification failed")); }
           },
-          prefill: { name: user.name, contact: user.phone, method: 'upi' },
+          prefill: { name: activeUser.name, contact: activeUser.phone, method: 'upi' },
           theme: { color: "#FF6B2B" }
         };
         const rzp = new window.Razorpay(options);

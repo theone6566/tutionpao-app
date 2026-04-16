@@ -66,11 +66,11 @@ export default function Pricing() {
 
       // Auto-name based on role
       const autoName = selectedPlan.type === 'teacher' ? 'Teacher' : 'Student';
-      await verifyOtp(phone, otp, autoName, selectedPlan.type, null, lat, lng);
+      const newUser = await verifyOtp(phone, otp, autoName, selectedPlan.type, null, lat, lng);
 
       // Now trigger payment
       setCheckoutStep('paying');
-      await handlePayment(selectedPlan.type, selectedPlan.amount);
+      await handlePayment(selectedPlan.type, selectedPlan.amount, newUser);
     } catch (err) {
       alert(err.message || "Invalid OTP. Please check and try again.");
       setLoading(false);
@@ -78,10 +78,10 @@ export default function Pricing() {
   };
 
   // Payment via Razorpay
-  const handlePayment = async (planType, amount) => {
+  const handlePayment = async (planType, amount, userOverride = null) => {
     try {
       setLoading(true);
-      await initiatePayment(amount, planType);
+      await initiatePayment(amount, planType, userOverride);
       setCheckoutStep('success');
       setLoading(false);
 
